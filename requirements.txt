@@ -1,0 +1,9 @@
+workalendar~=17.0.0
+pydantic~=2.10.5
+appdirs~=1.4.4
+path~=17.1.0
+PyYAML~=6.0.2
+pyperclip~=1.9.0
+colorama~=0.4.6
+multimethod~=2.0
+prompt_toolkit~=3.0.48

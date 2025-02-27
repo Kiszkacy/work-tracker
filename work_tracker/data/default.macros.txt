@@ -1,0 +1,6 @@
+1
+h | help
+e | exit
+c <month> | <month> calendar
+o8 | office && 8:00
+r8 | remote && 8:00

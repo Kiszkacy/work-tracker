@@ -1,0 +1,31 @@
+command:
+    calendar:
+        dayoff_background_color: null
+        dayoff_foreground_color: brightmagenta
+        holiday_background_color: null
+        holiday_foreground_color: brightgreen
+        office_background_color: null
+        office_foreground_color: brightred
+        remote_background_color: null
+        remote_foreground_color: brightblue
+        title_color: null
+        weekend_background_color: null
+        weekend_foreground_color: yellow
+    help:
+        command_list_description_padding: 2
+        command_use_case_bullet_point_symbol: '- '
+        command_use_case_description_padding: 4
+        command_use_case_indent_size: 2
+    undo_history_size: 50
+input:
+    command_chain_symbol: '&&'
+    prefix: '>>'
+    sub_prefix: ':'
+output:
+    frame:
+        padding: 1
+        title_footer_right_side_padding: 2
+        title_left_side_padding: 2
+        title_padding: 1
+    max_width: 80
+version: 1

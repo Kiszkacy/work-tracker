@@ -1,0 +1,63 @@
+[project]
+name = "work-tracker"
+description = "A Python library that helps tracking your work time."
+authors = [
+  {name = "Karol Kiszka", email = "karolkisz22@gmail.com"}
+]
+readme = "README.md"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+]
+dependencies = [
+    "workalendar~=17.0.0",
+    "pydantic~=2.10.5",
+    "appdirs~=1.4.4",
+    "path~=17.1.0",
+    "PyYAML~=6.0.2",
+    "pyperclip~=1.9.0",
+    "colorama~=0.4.6",
+    "multimethod~=2.0",
+    "prompt_toolkit~=3.0.48",
+]
+requires-python = ">=3.10,<4.0"
+keywords = ["work", "time", "tracker"]
+dynamic = ["version"]
+
+[project.scripts]
+work-tracker = "work_tracker.main:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest~=8.3.4",
+    "pytest-mock~=3.14.0",
+    "pytest-order~=1.3.0",
+    "pytest-random-order~=1.1.1",
+    "pytest-cov~=6.0.0",
+]
+
+[project.urls]
+source = "https://github.com/kiszkacy/work-tracker"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["work_tracker"]
+
+[tool.setuptools.dynamic]
+version = {attr = "work_tracker.version.__version__"}
+
+[tool.coverage.report]
+include_namespace_packages = true
+omit = ["**/__init__.py"]
+skip_empty = true
