@@ -1,4 +1,4 @@
-name: Unit tests
+name: Run tests
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 jobs:
   unit-tests:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         python-version: [ "3.10", "3.11", "3.12", "3.13" ]
@@ -29,5 +28,36 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run tests
-        run: pytest -vv -s --cov=work_tracker --cov-config=pyproject.toml
+      - name: Start pytest
+        run: pytest -vv -s --cov=work_tracker --cov-config=pyproject.toml --ignore=tests/e2e.py
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.10", "3.11", "3.12", "3.13" ]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --editable .
+          pip install -r requirements-dev.txt
+
+      - name: Start pytest
+        run: pytest -vv -s tests/e2e.py
