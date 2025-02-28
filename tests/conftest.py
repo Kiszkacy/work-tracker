@@ -10,7 +10,7 @@ from work_tracker.command.command_history import CommandHistoryEntry
 from work_tracker.command.commands.clear import ClearHandler
 from work_tracker.command.commands.fte import FteHandler
 from work_tracker.command.common import CommandArgument
-from work_tracker.common import AppData, Date, Mode, ReadonlyAppState
+from work_tracker.common import AppData, Date, Mode, ReadonlyAppState, classproperty
 from work_tracker.text.input_output_handler import InputOutputHandler
 
 
@@ -23,8 +23,7 @@ class TestInputOutput:
     def reset_text(cls):
         cls._text = ""
 
-    @classmethod
-    @property
+    @classproperty
     def text(cls) -> str:
         return cls._text
 

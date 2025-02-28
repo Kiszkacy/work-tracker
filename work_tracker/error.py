@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from work_tracker.command.command_manager import CommandManager
 from work_tracker.command.common import Command
-from .common import Date, Mode
+from .common import Date, Mode, classproperty
 
 
 class VersionCheckError(Exception):
@@ -17,8 +17,7 @@ class VersionCheckError(Exception):
 class CommandError(ABC):
     command_name: str
 
-    @property
-    @abstractmethod
+    @classproperty
     def message(self) -> str:
         raise NotImplementedError()
 
@@ -116,8 +115,7 @@ class ParserError(ABC):
     # error_start_index: int
     # error_end_index: int
 
-    @property
-    @abstractmethod
+    @classproperty
     def message(self) -> str:
         # return f"{self.raw_text}\n{' '*self.error_start_index + '^'*(self.error_end_index-self.error_start_index)}"
         raise NotImplementedError()

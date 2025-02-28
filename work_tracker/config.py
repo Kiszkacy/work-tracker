@@ -3,7 +3,7 @@ from __future__ import annotations
 import yaml
 from pydantic import BaseModel
 
-from work_tracker.common import get_data_path
+from work_tracker.common import get_data_path, classproperty
 
 
 class CalendarCommandConfig(BaseModel):
@@ -88,8 +88,7 @@ class Config:
     def ready(cls) -> bool:
         return cls.data is not None
 
-    @classmethod
-    @property
+    @classproperty
     def data(cls) -> MainConfig:
         if cls._data is None:
             cls._data = MainConfig.load()
