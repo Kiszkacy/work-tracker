@@ -29,12 +29,5 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Prepare version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
       - name: Publish to PyPI using OIDC
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          version: ${{ env.VERSION }}
