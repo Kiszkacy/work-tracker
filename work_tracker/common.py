@@ -23,8 +23,45 @@ month_map: dict[str, int] = { # 'jan', 'january', 'feb', 'february', ...
 }
 
 
+def get_cache_path() -> Path:
+    cache_path: str = appdirs.user_cache_dir("work_tracker", "kiszkacy")
+    os.makedirs(cache_path, exist_ok=True)
+    return Path(cache_path).absolute()
+
+
+def get_data_path() -> Path:
+    data_path: str = appdirs.user_data_dir("work_tracker", "kiszkacy")
+    os.makedirs(data_path, exist_ok=True)
+    return Path(data_path).absolute()
+
+
 def find_first_not_fulfilling(items: list[any], predicate: Callable[[list[any]], bool]) -> any | None:
     return next((item for item in items if not predicate(item)), None)
+
+
+class KeyDefaultDict(defaultdict):
+    def __init__(self, function: Callable[[any], any]):
+        super().__init__(None)
+        self.function: Callable[[any], any] = function
+
+    def __missing__(self, key) -> any:
+        value: any = self.function(key)
+        self[key] = value
+        return value
+
+    def __reduce__(self):
+        return self.__class__, (self.function,), dict(self)
+
+    def __setstate__(self, state: any):
+        self.update(state)
+
+
+class classproperty:
+    def __init__(self, func):
+        self.fget = func
+
+    def __get__(self, instance, owner):
+        return self.fget(owner)
 
 
 @dataclass(frozen=True)
@@ -391,35 +428,6 @@ class AppData:
         pass
 
 
-class KeyDefaultDict(defaultdict):
-    def __init__(self, function: Callable[[any], any]):
-        super().__init__(None)
-        self.function: Callable[[any], any] = function
-
-    def __missing__(self, key) -> any:
-        value: any = self.function(key)
-        self[key] = value
-        return value
-
-    def __reduce__(self):
-        return self.__class__, (self.function,), dict(self)
-
-    def __setstate__(self, state: any):
-        self.update(state)
-
-
-def get_cache_path() -> Path:
-    cache_path: str = appdirs.user_cache_dir("work_tracker", "kiszkacy")
-    os.makedirs(cache_path, exist_ok=True)
-    return Path(cache_path).absolute()
-
-
-def get_data_path() -> Path:
-    data_path: str = appdirs.user_data_dir("work_tracker", "kiszkacy")
-    os.makedirs(data_path, exist_ok=True)
-    return Path(data_path).absolute()
-
-
 class Mode(Enum):
     Today = auto()
     Day = auto()
@@ -433,10 +441,9 @@ class AppState:
 
 
 # cant use inheritance due to 'Frozen dataclasses can not inherit non-frozen one and vice versa'
-@dataclass(frozen=True) # TODO yea rename me wtf bro
+@dataclass(frozen=True)
 class ReadonlyAppState:
     active_date: Date
     mode: Mode
     states: tuple[CommandHistoryEntry]
     current_state_index: int
-

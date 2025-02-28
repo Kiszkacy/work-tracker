@@ -1,6 +1,6 @@
 from work_tracker.command.command_initializer import CommandInitializer
 from work_tracker.command.common import Command, TimeArgument, CommandHelp, _global_command_templates
-from work_tracker.common import Mode
+from work_tracker.common import Mode, classproperty
 
 
 class CommandManager:
@@ -53,23 +53,19 @@ class CommandManager:
         valid_argument_types=[[object, ...]]
     )
 
-    @classmethod
-    @property
+    @classproperty
     def time_command(cls) -> Command:
         return cls._time_command
 
-    @classmethod
-    @property
+    @classproperty
     def date_command(cls) -> Command:
         return cls._date_command
 
-    @classmethod
-    @property
+    @classproperty
     def macro_execute_command(cls) -> Command:
         return cls._macro_execute_command
 
-    @classmethod
-    @property
+    @classproperty
     def commands(cls) -> list[Command]:
         if len(cls._commands) == 0:
             cls._commands = CommandInitializer.initialize_commands(_global_command_templates)

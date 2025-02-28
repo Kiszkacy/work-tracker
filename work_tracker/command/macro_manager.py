@@ -2,7 +2,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from work_tracker.common import get_data_path
+from work_tracker.common import get_data_path, classproperty
 
 
 @dataclass(frozen=True)
@@ -21,14 +21,12 @@ class MacroManager:
     _macros: dict[str, MacroTemplate] = {}
     _initialized: bool = False
 
-    @classmethod
-    @property
+    @classproperty
     def macros(cls) -> dict[str, MacroTemplate]:
         cls._check_initialization()
         return cls._macros # TODO deepcopy
 
-    @classmethod
-    @property
+    @classproperty
     def iterable_macros(cls) -> list[MacroTemplate]:
         cls._check_initialization()
         return list(cls._macros.values())
