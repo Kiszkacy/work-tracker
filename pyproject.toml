@@ -52,8 +52,9 @@ source = "https://github.com/kiszkacy/work-tracker"
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["work_tracker"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["work_tracker*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "work_tracker.version.__version__"}
