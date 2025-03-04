@@ -637,8 +637,8 @@ _global_command_templates: list[CommandTemplate] = [
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "target", "displays the target time at work for the given date."),
-                CommandUseCaseDescription({Mode.Today, Mode.Day}, "target <time>", "modifies the target time at work by the given amount."),
-                CommandUseCaseDescription({Mode.Today, Mode.Month}, "target <'office'|'remote'>", "displays the target time at work for the entire month of office or remote work."),
+                CommandUseCaseDescription(set(Mode), "target <time>", "modifies the target time at work by the given amount."),
+                CommandUseCaseDescription(set(Mode), "target <'office'|'remote'>", "displays the target time at work for the entire month of office or remote work."),
                 CommandUseCaseDescription({Mode.Today, Mode.Day}, "target <'current'>", "sets the target time at work to the time already spent at work on the given date."),
             ],
         ),
