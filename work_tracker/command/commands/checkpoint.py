@@ -17,6 +17,10 @@ class CheckpointHandler(CommandHandler):
                 checkpoint_name: str = checkpoint_path.name.removesuffix('.save.checkpoint') # TODO hardcoded '.save.checkpoint'
                 match: re.Match = re.search(r'__(?!.*__)', checkpoint_name)
                 checkpoints.append((checkpoint_name[:match.start()], checkpoint_name[match.end():]))
+            if len(checkpoints) == 0:
+                self.io.output(f"No checkpoints were yet created, create one via {Color.Brightblue.value}checkpoint <name>{Color.Reset.value}.")
+                return CommandHandlerResult(undoable=False)
+
             sorted_checkpoints_by_time: list[tuple[str, str]] = sorted(checkpoints, key=lambda checkpoint: checkpoint[1])
 
             seperator: str = " | " # TODO make seperator configurable
