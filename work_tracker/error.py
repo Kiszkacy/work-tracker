@@ -30,7 +30,7 @@ class CommandErrorInvalidArgumentCount(CommandError):
     def message(self) -> str:
         expected_counts: list[int] = sorted({len(args) for args in CommandManager.get_command_by_name(self.command_name).valid_argument_types})
         formatted_counts: str = ', '.join(map(str, expected_counts[:-1])) + ((' or ' if len(expected_counts) > 1 else '') + str(expected_counts[-1]))
-        return f"invalid amount of arguments, received {self.received_argument_count} while {self.command_name} expects {formatted_counts}."
+        return f"invalid amount of arguments, received {self.received_argument_count} while '{self.command_name}' expects {formatted_counts}."
 
 
 @dataclass(frozen=True)
@@ -50,7 +50,7 @@ class CommandErrorInvalidArgumentValue(CommandError):
 
     @property
     def message(self) -> str:
-        expected_value: str = self.expected_value if not isinstance(self.expected_value, list) else f"one of ({' '.join(self.expected_value)})"
+        expected_value: str = self.expected_value if not isinstance(self.expected_value, list) else f"one of ({', '.join(self.expected_value)})"
         return f"invalid argument value, received {self.received_value} expected {expected_value}."
 
 
@@ -76,19 +76,20 @@ class CommandErrorInvalidDateCount(CommandError):
 @dataclass(frozen=True)
 class CommandErrorInvalidMode(CommandError):
     mode: Mode
+    supported_modes: set[Mode] = None
 
     @property
     def message(self) -> str:
         command: Command = CommandManager.get_command_by_name(self.command_name)
-        supported_modes: list[Mode] = list(command.supported_modes)
+        supported_modes: list[Mode] = list(command.supported_modes) if self.supported_modes is None or len(self.supported_modes) == 0 else list(self.supported_modes)
         supported_modes.sort(key=lambda mode: mode.name)
 
         if len(supported_modes) == 1:
-            supported_modes_text: str = f"'{supported_modes[0].name}'"
+            supported_modes_text: str = f"'{supported_modes[0].name}' mode"
         else:
-            supported_modes_text: str = ", ".join(f"'{mode.name}'" for mode in supported_modes[:-1]) + f" or '{supported_modes[-1].name}'"
+            supported_modes_text: str = ", ".join(f"'{mode.name}'" for mode in supported_modes[:-1]) + f" and '{supported_modes[-1].name}' modes"
 
-        return f"invalid mode in which command was called, {self.command_name} works only in {supported_modes_text} mode but currently in '{self.mode.name}' mode."
+        return f"invalid mode in which command was called, this '{self.command_name}' command execution supports only {supported_modes_text} but currently in '{self.mode.name}' mode."
 
 
 @dataclass(frozen=True)
@@ -96,7 +97,7 @@ class CommandErrorNotImplemented(CommandError):
 
     @property
     def message(self) -> str:
-        return f"command {self.command_name} is not yet implemented."
+        return f"command '{self.command_name}' is not yet implemented."
 
 
 @dataclass(frozen=True)
@@ -137,7 +138,7 @@ class ParserErrorInvalidArgumentCount(ParserError):
     def message(self) -> str:
         expected_counts: list[int] = sorted({len(args) for args in self.command.valid_argument_types})
         formatted_counts: str = ', '.join(map(str, expected_counts[:-1])) + ((' or ' if len(expected_counts) > 1 else '') + str(expected_counts[-1]))
-        return f"invalid amount of arguments, received {self.received_amount} while {self.command.name} expects {formatted_counts}."
+        return f"invalid amount of arguments, received {self.received_amount} while command '{self.command.name}' expects {formatted_counts}."
 
 
 @dataclass(frozen=True)
@@ -153,7 +154,7 @@ class ParserErrorInvalidArgumentTypes(ParserError):
         ]
         formatted_types: str = ', '.join(valid_types[:-1]) + ((' or ' if len(valid_types) > 1 else '') + str(valid_types[-1]))
 
-        return f"invalid argument types, received {self._format_type_list(self.received_types)} while {self.command.name} expects {formatted_types}."
+        return f"invalid argument types, received {self._format_type_list(self.received_types)} while command '{self.command.name}' expects {formatted_types}."
 
     @staticmethod
     def _format_type_list(types: list[type]) -> str:

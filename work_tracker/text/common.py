@@ -170,7 +170,7 @@ def frame_text(
 
     padding: int = Config.data.output.frame.padding
     lines: list[str] = text.split("\n")
-    max_width: int = max([0] + [(minimal_line_width or 0)] + [(minimal_width or 0) - (padding*2 + 2)] + [len(strip_ansi(line)) for line in lines])
+    max_width: int = max([len(title or '') + padding*2 + Config.data.output.frame.title_padding*2 or 0] + [(minimal_line_width or 0)] + [(minimal_width or 0) - (padding*2 + 2)] + [len(strip_ansi(line)) for line in lines])
 
     if title is not None and not footer_title:
         title = f"{title_color.value}{' '*Config.data.output.frame.title_padding}{title}{' '*Config.data.output.frame.title_padding}{frame_color.value}"
