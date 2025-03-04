@@ -2,7 +2,7 @@ from fractions import Fraction
 
 import pytest
 
-from tests.conftest import handle_call, mock_io, TestInputOutput
+from tests.conftest import handle_call, TestInputOutput
 from work_tracker.command.command_handler import CommandHandlerResult
 from work_tracker.command.commands.fte import FteHandler
 from work_tracker.common import Date, Mode
