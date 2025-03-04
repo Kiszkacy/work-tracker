@@ -40,12 +40,12 @@ class StatusHandler(CommandHandler):
         minutes: int = int(minutes_at_work % 60)
         target_hours: int = int(target_minutes // 60)
         target_minutes: int = int(target_minutes % 60)
-        if target_hours == 0:
+        if target_hours == 0 and hours == 0:
             self.io.write(f"{minutes} minutes", color=Color.Brightblue, end=" ")
         else:
             self.io.write(f"{hours}:{minutes:02}", color=Color.Brightblue, end="")
         self.io.write("/", end="")
-        if target_hours == 0:
+        if target_hours == 0 and hours == 0:
             self.io.output(f" {target_minutes} minutes", color=Color.Blue)
         else:
             self.io.output(f"{target_hours}:{target_minutes:02}", color=Color.Blue)
@@ -65,12 +65,12 @@ class StatusHandler(CommandHandler):
             target_hours: int = int(target_minutes_office // 60)
             target_minutes: int = int(target_minutes_office % 60)
 
-            if target_hours == 0:
+            if target_hours == 0 and hours == 0:
                 self.io.write(f"{minutes} minutes", color=Color.Brightblue, end=" ")
             else:
                 self.io.write(f"{hours}:{minutes:02}", color=Color.Brightblue, end="")
             self.io.write("/", end="")
-            if target_hours == 0:
+            if target_hours == 0 and hours == 0:
                 self.io.write(f" {target_minutes} minutes", color=Color.Blue, end=" ")
             else:
                 self.io.write(f"{target_hours}:{target_minutes:02}", color=Color.Blue, end=" ")
@@ -80,12 +80,12 @@ class StatusHandler(CommandHandler):
             minutes: int = int(minutes_at_work_remote % 60)
             target_hours: int = int(target_minutes_remote // 60)
             target_minutes: int = int(target_minutes_remote % 60)
-            if target_hours == 0:
+            if target_hours == 0 and hours == 0:
                 self.io.write(f"{minutes} minutes", color=Color.Brightblue, end=" ")
             else:
                 self.io.write(f"{hours}:{minutes:02}", color=Color.Brightblue, end="")
             self.io.write("/", end="")
-            if target_hours == 0:
+            if target_hours == 0 and hours == 0:
                 self.io.write(f" {target_minutes} minutes", color=Color.Blue, end=" ")
             else:
                 self.io.write(f"{target_hours}:{target_minutes:02}", color=Color.Blue, end=" ")
