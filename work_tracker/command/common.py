@@ -231,9 +231,9 @@ _global_command_templates: list[CommandTemplate] = [
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "days <minutes>", "calculates the number of days required to reach the monthly target work time while keeping daily work time as close as possible to the given amount"),
-                CommandUseCaseDescription(set(Mode), "days ['office'|'remote'] <minutes>", "calculates the required number of days, limited to remote or office work"),
+                CommandUseCaseDescription(set(Mode), "days <'office'|'remote'> <minutes>", "calculates the required number of days, limited to remote or office work"),
                 CommandUseCaseDescription(set(Mode), "days <minutes> 'clean'", "calculates the required number of days, ignoring already logged work time in a month"),
-                CommandUseCaseDescription(set(Mode), "days ['office'|'remote'] <minutes> 'clean'", "calculates the required number of days, limited to remote or office work, while ignoring already logged work time in a month"),
+                CommandUseCaseDescription(set(Mode), "days <'office'|'remote'> <minutes> 'clean'", "calculates the required number of days, limited to remote or office work, while ignoring already logged work time in a month"),
             ],
         ),
         supported_modes=set(Mode),
@@ -627,7 +627,7 @@ _global_command_templates: list[CommandTemplate] = [
     CommandTemplate(
         name="target",
         help=CommandHelp(
-            full_use_case_template="target [time|'office'|'remote'|'remote']",
+            full_use_case_template="target [time|'office'|'remote'|'current']",
             short_help_description="Displays or modifies the target time at work",
             full_help_description=(
                 " When run without arguments, this command prints the target time spent at work for the given date."
