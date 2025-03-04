@@ -1,6 +1,7 @@
 include README.md
 include LICENSE
 recursive-include work_tracker *.py
+recursive-include work_tracker/data *
 
 exclude *.pyc
 exclude tests/*
