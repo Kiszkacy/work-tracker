@@ -26,3 +26,4 @@ class OfficeHandler(CommandHandler):
         filled_date: Date = date.fill_with_today().to_day_date()
         self.data.day[filled_date].office_work = True
         self.data.day[filled_date].remote_work = False
+        self.data.day[date].is_a_day_off = False
