@@ -369,6 +369,8 @@ _global_command_templates: list[CommandTemplate] = [
             short_help_description="Marks a date as a holiday",
             full_help_description=(
                 " Marks a date as a holiday. As a result, this date is no longer treated as a workday, even if it was marked as one before."
+                " If the current monthly target work time matches fte-based calculation, it will be automatically updated to reflect the change in workdays."
+                " Otherwise the monthly target work time remains unchanged."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription({Mode.Today, Mode.Day}, "holiday", ""),
@@ -689,6 +691,8 @@ _global_command_templates: list[CommandTemplate] = [
             short_help_description="Marks a date as a work day",
             full_help_description=(
                 " Marks a date as a work day. As a result, this date is no longer treated as a holiday or weekend, even if it was marked as one before."
+                " If the current monthly target work time matches fte-based calculation, it will be automatically updated to reflect the change in workdays."
+                " Otherwise the monthly target work time remains unchanged."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription({Mode.Today, Mode.Day}, "workday", ""),
