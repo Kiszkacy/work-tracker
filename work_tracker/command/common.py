@@ -386,7 +386,7 @@ _global_command_templates: list[CommandTemplate] = [
             full_use_case_template="info",
             short_help_description="Displays detailed information for a specific date",
             full_help_description=(
-                " Displays all relevant information for a given date, including the time worked, target time, and various attributes such as "
+                " Displays all relevant information for a given date, including the time worked, target time, and various attributes such as"
                 " whether the day is marked as a holiday, workday, remote or office work, or a day off."
             ).strip(),
             use_case_description=[

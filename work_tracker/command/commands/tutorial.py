@@ -75,7 +75,7 @@ class TutorialHandler(CommandHandler):
             total_pages: int = len(self.pages)
 
             while True:
-                self.display_page_(current_page_index)
+                self.display_page(current_page_index)
                 user_input: list[AdditionalInputArgument] = self.get_additional_input(custom_autocomplete=[str(number+1) for number in range(total_pages)] + ["next", "previous", "quit"])
                 if len(user_input) != 1:
                     continue
@@ -99,14 +99,14 @@ class TutorialHandler(CommandHandler):
         elif date_count == 0 and argument_count == 1:
             if arguments[0] <= 0 or arguments[0] >= len(self.pages):
                 return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[0], expected_value=f"page number between 1 and {len(self.pages)}"))
-            self.display_page_(arguments[0]-1)
+            self.display_page(arguments[0]-1)
             return CommandHandlerResult(undoable=False)
         elif date_count != 0:
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidDateCount(self.command_name, received_date_count=date_count, expected_date_count=0))
         else: # argument_count > 1
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
 
-    def display_page_(self, index: int):
+    def display_page(self, index: int):
         wrapped_page_text: str = wrap_text(
             text=self.pages[index],
             width=Config.data.output.max_width,
