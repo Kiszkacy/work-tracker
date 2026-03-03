@@ -11,7 +11,7 @@ class MacroTemplate:
     raw: str
     command_text: str
     arguments: list[str]
-    default_argument_values: list[str]
+    default_argument_values: list[str|None]
 
 
 __macro_version__: int = 1
