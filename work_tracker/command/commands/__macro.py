@@ -4,12 +4,12 @@ from work_tracker.command.common import CommandArgument, ParseResult, CommandQue
 from work_tracker.command.macro_manager import MacroManager, MacroTemplate
 from work_tracker.common import Date, ReadonlyAppState
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorCustom
+from dataclasses import replace
 
 
 class __MacroHandler(CommandHandler):
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if argument_count == 0:
-            print(arguments)
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
 
         macro_identifier: str = arguments[0]
@@ -51,4 +51,7 @@ class __MacroHandler(CommandHandler):
             )
 
         queries: list[CommandQuery] = interpret_result.queries
+        for index, query in enumerate(queries): # TODO: this is quite ugly, but works, here date normalization is OMITTED !
+            new_dates: list[Date] = query.dates + dates
+            queries[index] = replace(query, dates=new_dates, date_count=new_dates.__len__())
         return CommandHandlerResult(undoable=True, execute_after=queries)
