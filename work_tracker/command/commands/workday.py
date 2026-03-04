@@ -23,11 +23,17 @@ class WorkdayHandler(CommandHandler):
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
 
     def _handle_day(self, date: Date):
-        if self._is_current_month_target_from_fte(date.fill_with_today().to_month_date()):
-            self._update_month_target_minutes(date.fill_with_today().to_month_date())
+        day_date: Date = date.fill_with_today().to_day_date()
+        month_date: Date = date.fill_with_today().to_month_date()
+        update_target_minutes = False
 
-        filled_date: Date = date.fill_with_today().to_day_date()
-        self.data.day[filled_date].is_a_work_day = True
+        if self._is_current_month_target_from_fte(month_date):
+            update_target_minutes = True
+
+        self.data.day[day_date].is_a_work_day = True
+
+        if update_target_minutes:
+            self._update_month_target_minutes(month_date)
 
     def _is_current_month_target_from_fte(self, month: Date) -> bool:
         return self.data.month[month].target_minutes == sum([480 * self.data.month[month].fte if self.data.day[day].is_a_work_day else 0 for day in month.days_in_a_month()])
