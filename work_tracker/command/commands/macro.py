@@ -61,12 +61,12 @@ class MacroHandler(CommandHandler):
             command_text: str = " ".join(arguments_to_process[command_text_starts_at:])
 
             # TODO check if macro_identifier is equal to an existing command or its abbreviation
-            default_values: list[any] = [] # TODO duplicated code via MacroManager
+            default_values: list[str|None] = [] # TODO duplicated code via MacroManager
             parsed_arguments: list[str] = []
             for argument in macro_arguments:
                 if "=" in argument: # TODO arguments with '=' must be after arguments without it
                     name, value = argument[1:-1].split("=", 1)
-                    default_values.append(value)
+                    default_values.append('') if value.lower() == "null" else default_values.append(value)
                     parsed_arguments.append(f"{name}")
                 else:
                     default_values.append(None)

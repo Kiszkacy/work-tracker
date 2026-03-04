@@ -24,41 +24,34 @@ class __MacroHandler(CommandHandler):
             )
 
         given_arguments: list[any] = arguments[1:]
-        required_argument_count: int = len([argument for argument in macro.default_argument_values if argument is None])
         given_argument_count: int = len(given_arguments)
-        argument_suffix: str = "argument" if required_argument_count == 1 else "arguments"
-        if required_argument_count == 0 and given_argument_count > 0:
-            message: str = f"macro {macro_identifier} expects no arguments, but {given_argument_count} were provided." if given_argument_count > 1 else f"macro {macro_identifier} expects no arguments, but 1 was provided."
+
+        max_accepted_argument_count: int = len(macro.default_argument_values)
+        min_required_argument_count: int = len([argument for argument in macro.default_argument_values if argument is None])
+
+        # TODO: really dont like using nested methods, but this is a quick fix
+        def plural_argument(count: int) -> str: return "argument" if count == 1 else "arguments"
+        def plural_be(count: int) -> str: return "was" if count == 1 else "were"
+
+        if given_argument_count > max_accepted_argument_count:
+            if max_accepted_argument_count == 0:
+                message = f"macro {macro_identifier} expects no arguments, but {given_argument_count} {plural_be(given_argument_count)} provided."
+            else:
+                message = f"macro {macro_identifier} expects at most {max_accepted_argument_count} {plural_argument(max_accepted_argument_count)}, but {given_argument_count} {plural_be(given_argument_count)} provided."
+
             return CommandHandlerResult(
                 undoable=False,
-                error=CommandErrorCustom(
-                    command_name=self.command_name,
-                    custom_message=message
-                )
+                error=CommandErrorCustom(command_name=self.command_name, custom_message=message)
             )
-        elif required_argument_count != 0 and given_argument_count == 0:
+        elif given_argument_count < min_required_argument_count:
+            if given_argument_count == 0:
+                message = f"macro {macro_identifier} requires at least {min_required_argument_count} {plural_argument(min_required_argument_count)}, but no arguments were provided."
+            else:
+                message = f"macro {macro_identifier} requires at least {min_required_argument_count} {plural_argument(min_required_argument_count)}, but only {given_argument_count} {plural_be(given_argument_count)} provided."
+
             return CommandHandlerResult(
                 undoable=False,
-                error=CommandErrorCustom(
-                    command_name=self.command_name,
-                    custom_message=f"macro {macro_identifier} requires {required_argument_count} {argument_suffix}, but no values were provided."
-                )
-            )
-        elif required_argument_count != 0 and given_argument_count < required_argument_count:
-            return CommandHandlerResult(
-                undoable=False,
-                error=CommandErrorCustom(
-                    command_name=self.command_name,
-                    custom_message=f"macro {macro_identifier} requires {required_argument_count} {argument_suffix}, but only {given_argument_count} values were provided."
-                )
-            )
-        elif required_argument_count != 0 and given_argument_count > required_argument_count:
-            return CommandHandlerResult(
-                undoable=False,
-                error=CommandErrorCustom(
-                    command_name=self.command_name,
-                    custom_message=f"macro {macro_identifier} requires {required_argument_count} {argument_suffix}, but {given_argument_count} values were provided."
-                )
+                error=CommandErrorCustom(command_name=self.command_name, custom_message=message)
             )
 
         macro_arguments: list[str] = macro.default_argument_values.copy()
