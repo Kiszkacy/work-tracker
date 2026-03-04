@@ -36,7 +36,7 @@ class __MacroHandler(CommandHandler):
                     custom_message=message
                 )
             )
-        elif given_argument_count == 0: # required_argument_count != 0
+        elif required_argument_count != 0 and given_argument_count == 0:
             return CommandHandlerResult(
                 undoable=False,
                 error=CommandErrorCustom(
@@ -44,7 +44,7 @@ class __MacroHandler(CommandHandler):
                     custom_message=f"macro {macro_identifier} requires {required_argument_count} {argument_suffix}, but no values were provided."
                 )
             )
-        elif given_argument_count < required_argument_count: # required_argument_count != 0
+        elif required_argument_count != 0 and given_argument_count < required_argument_count:
             return CommandHandlerResult(
                 undoable=False,
                 error=CommandErrorCustom(
@@ -52,7 +52,7 @@ class __MacroHandler(CommandHandler):
                     custom_message=f"macro {macro_identifier} requires {required_argument_count} {argument_suffix}, but only {given_argument_count} values were provided."
                 )
             )
-        elif given_argument_count > required_argument_count: # required_argument_count != 0
+        elif required_argument_count != 0 and given_argument_count > required_argument_count:
             return CommandHandlerResult(
                 undoable=False,
                 error=CommandErrorCustom(
