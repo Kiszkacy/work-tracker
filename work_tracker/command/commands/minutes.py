@@ -13,10 +13,36 @@ class CalculateType(Enum):
     Remote = auto(),
 
 
+class CommandCallType(Enum):
+    DAYS_ONLY = auto(),
+    CLEAN_DAYS = auto(),
+    OFFICE_OR_REMOTE_DAYS = auto(),
+    OFFICE_OR_REMOTE_CLEAN_DAYS = auto(),
+
+
 class MinutesHandler(CommandHandler):
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
-        if argument_count == 0 or argument_count > 3:
+        call_type: CommandCallType = None
+        
+        if argument_count == 1:
+            call_type = CommandCallType.DAYS_ONLY
+            if arguments[0] <= 0:
+                return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[0], expected_value="value bigger than 0"))
+        elif argument_count == 2 and isinstance(arguments[0], str) and isinstance(arguments[1], int): # minutes ('office'|'remote') <days>
+            call_type = CommandCallType.OFFICE_OR_REMOTE_DAYS
+            if arguments[1] <= 0:
+                return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[1], expected_value="value bigger than 0"))
+        elif argument_count == 2 and isinstance(arguments[0], int) and isinstance(arguments[1], str): # minutes <days> ('clean')
+            call_type = CommandCallType.CLEAN_DAYS
+            if arguments[0] <= 0:
+                return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[0], expected_value="value bigger than 0"))
+        elif argument_count == 3: # minutes ('office'|'remote') <days> ('clean')
+            call_type = CommandCallType.OFFICE_OR_REMOTE_CLEAN_DAYS
+            if arguments[1] <= 0:
+                return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[1], expected_value="value bigger than 0"))
+        else: # argument_count == 0 or argument_count > 3
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
+        
         if date_count != 0:
             if invalid_date := find_first_not_fulfilling(dates, lambda date: date.is_month_date()):
                 return CommandHandlerResult(undoable=False, error=CommandErrorInvalidDate(self.command_name, received_date=invalid_date))
@@ -30,24 +56,25 @@ class MinutesHandler(CommandHandler):
 
         for date in dates:
             date = date.fill_with(state.active_date)
-            if argument_count == 1:
-                self._execute(date, arguments[0], CalculateType.All, take_into_account_filled_dates=True)
-            elif argument_count == 2 and isinstance(arguments[0], str)  and isinstance(arguments[1], int): # minutes ('office'|'remote') <days>
-                if not "office".startswith(arguments[0]) and not "remote".startswith(arguments[0]):
-                    return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[0], expected_value=["office", "remote"]))
-                count_office_minutes: bool = "office".startswith(arguments[0])
-                self._execute(date, arguments[1], CalculateType.Office if count_office_minutes else CalculateType.Remote, take_into_account_filled_dates=True)
-            elif argument_count == 2 and isinstance(arguments[0], int) and isinstance(arguments[1], str): # minutes <days> ('clean')
-                if not "clean".startswith(arguments[1]):
-                    return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[0], expected_value="clean"))
-                self._execute(date, arguments[0], CalculateType.All, take_into_account_filled_dates=False)
-            elif argument_count == 3: # minutes ('office'|'remote') <days> ('clean')
-                if not "office".startswith(arguments[0]) and not "remote".startswith(arguments[0]):
-                    return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[0], expected_value=["office", "remote"]))
-                if not "clean".startswith(arguments[2]):
-                    return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[0], expected_value="clean"))
-                count_office_minutes: bool = "office".startswith(arguments[0])
-                self._execute(date, arguments[1], CalculateType.Office if count_office_minutes else CalculateType.Remote, take_into_account_filled_dates=False)
+            match call_type:
+                case CommandCallType.DAYS_ONLY:
+                    self._execute(date, arguments[0], CalculateType.All, take_into_account_filled_dates=True)
+                case CommandCallType.OFFICE_OR_REMOTE_DAYS:
+                    if not "office".startswith(arguments[0]) and not "remote".startswith(arguments[0]):
+                        return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[0], expected_value=["office", "remote"]))
+                    count_office_minutes: bool = "office".startswith(arguments[0])
+                    self._execute(date, arguments[1], CalculateType.Office if count_office_minutes else CalculateType.Remote, take_into_account_filled_dates=True)
+                case CommandCallType.CLEAN_DAYS:
+                    if not "clean".startswith(arguments[1]):
+                        return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[1], expected_value="clean"))
+                    self._execute(date, arguments[0], CalculateType.All, take_into_account_filled_dates=False)
+                case CommandCallType.OFFICE_OR_REMOTE_CLEAN_DAYS:
+                    if not "office".startswith(arguments[0]) and not "remote".startswith(arguments[0]):
+                        return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[0], expected_value=["office", "remote"]))
+                    if not "clean".startswith(arguments[2]):
+                        return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentValue(self.command_name, received_value=arguments[2], expected_value="clean"))
+                    count_office_minutes: bool = "office".startswith(arguments[0])
+                    self._execute(date, arguments[1], CalculateType.Office if count_office_minutes else CalculateType.Remote, take_into_account_filled_dates=False)
         return CommandHandlerResult(undoable=False)
             
     def _execute(self, date: Date, day_count: int, calculate_type: CalculateType, take_into_account_filled_dates: bool):
