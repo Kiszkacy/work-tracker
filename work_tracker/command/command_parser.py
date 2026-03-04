@@ -36,7 +36,6 @@ class CommandParser:
         multi_dates: list[Date] = []
         for index, text in enumerate(text_per_command):
             parser: CommandTextParser = CommandTextParser(text)
-            dates: list[Date] = []
             if parser.peak() is None:
                 continue
             
@@ -45,16 +44,10 @@ class CommandParser:
                 multi_dates = cls._get_multi_command_dates(parser) # TODO fix, this does not check if the multi_end_string is required so input '(<date> <date>...' is valid
 
             predefined_command_arguments: list[CommandArgument] = []
+            dates: list[Date] = cls._get_dates(parser)
             command: Command = None
-            if (time := cls._get_time(parser)) is not None:
-                command = CommandManager.time_command
-                predefined_command_arguments.append(time)
-            else:
-                dates = cls._get_dates(parser)
 
-            if command is not None:
-                pass
-            elif parser.peak() is not None and (time := cls._get_time(parser)) is not None:
+            if parser.peak() is not None and (time := cls._get_time(parser)) is not None:
                 command: Command = CommandManager.time_command
                 predefined_command_arguments.append(time)
             elif parser.peak() is None and len(dates) == 1:
