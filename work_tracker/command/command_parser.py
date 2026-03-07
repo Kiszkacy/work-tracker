@@ -6,7 +6,7 @@ from typing import get_origin, get_args
 from work_tracker.command.command_manager import CommandManager
 from work_tracker.command.command_text_parser import CommandTextParser
 from work_tracker.command.common import Command, CommandQuery, Date, CommandArgument, TimeArgument, TimeArgumentType, ParseResult, Number, AdditionalInputArgument
-from work_tracker.error import ParserError, ParserErrorMultipleDates, ParserErrorInvalidArgumentCount, ParserErrorInvalidArgumentTypes, ParserErrorUnknownCommand
+from work_tracker.error import ParserError, ParserErrorMultipleDates, ParserErrorInvalidArgumentCount, ParserErrorInvalidArgumentTypes, ParserErrorUnknownCommand, ParserErrorMultipleDatesInvalidSyntax
 from work_tracker.command.macro_manager import MacroManager
 from work_tracker.common import month_map
 from work_tracker.config import Config
@@ -36,6 +36,9 @@ class CommandParser:
             is_first_command_in_chain: bool = index == 0
             if is_first_command_in_chain and cls._has_multi_command_dates(parser):
                 multi_dates = cls._get_multi_command_dates(parser) # TODO fix, this does not check if the multi_end_string is required so input '(<date> <date>...' is valid
+                if len(multi_dates) == 0:
+                    error = ParserErrorMultipleDatesInvalidSyntax()
+                    break
 
             predefined_command_arguments: list[CommandArgument] = []
             dates: list[Date] = cls._get_dates(parser)
@@ -49,7 +52,7 @@ class CommandParser:
             elif parser.peak() is None and len(dates) > 1: # situation where only dates are provided
                 error = ParserErrorMultipleDates()
                 break
-            elif parser.peak() in MacroManager.macros: # TODO macro
+            elif parser.peak() in MacroManager.macros:
                 command: Command = CommandManager.macro_execute_command
                 predefined_command_arguments.append(parser.next())
             else:
@@ -120,23 +123,30 @@ class CommandParser:
 
     @classmethod
     def _get_multi_command_dates(cls, parser: CommandTextParser) -> list[Date]:
-        if parser.peak() == Config.data.input.multi_date_start_symbol:
-            parser.next()
-        return cls._get_dates(parser, multi_command_dates=True)
+        return cls._get_dates(parser, require_multi_command_date_symbols=True)
 
     @classmethod
-    def _get_dates(cls, parser: CommandTextParser, multi_command_dates: bool = False) -> list[Date]:
+    def _get_dates(cls, parser: CommandTextParser, require_multi_command_date_symbols: bool = False) -> list[Date]:
         parsed_dates: list[Date] = []
         force_break: bool = False
         first_word: bool = True
+        seen_multi_date_end_symbol: bool = False
         while word := parser.peak(): # TODO split the 'Config.data.input.multi_date_end_symbol' logic into _get_multi_command_dates ?
-            if multi_command_dates and first_word and word != Config.data.input.multi_date_start_symbol and word.startswith(Config.data.input.multi_date_start_symbol):
-                word = word[len(Config.data.input.multi_date_start_symbol):]
+            if require_multi_command_date_symbols and first_word:
                 first_word = False
-            if multi_command_dates and word == Config.data.input.multi_date_end_symbol:
+                if word == Config.data.input.multi_date_start_symbol:
+                    parser.next()
+                    continue
+                elif word.startswith(Config.data.input.multi_date_start_symbol):
+                    word = word[len(Config.data.input.multi_date_start_symbol):]
+                else:
+                    break
+            elif require_multi_command_date_symbols and word == Config.data.input.multi_date_end_symbol:
+                seen_multi_date_end_symbol = True
                 parser.next()
                 break
-            if multi_command_dates and word.endswith(Config.data.input.multi_date_end_symbol):
+            elif require_multi_command_date_symbols and word.endswith(Config.data.input.multi_date_end_symbol):
+                seen_multi_date_end_symbol = True
                 word = word[:-len(Config.data.input.multi_date_end_symbol)]
                 force_break = True
             
@@ -150,7 +160,10 @@ class CommandParser:
             if force_break:
                 break
 
-        return Date.normalize_dates(parsed_dates, preserve_order=True) # TODO normalize too aggressive in some cases, allow user to turn it off ?
+        if require_multi_command_date_symbols and not seen_multi_date_end_symbol:
+            return []
+        else:
+            return Date.normalize_dates(parsed_dates, preserve_order=True) # TODO normalize too aggressive in some cases, allow user to turn it off ?
 
     @classmethod
     def _extract_date(cls, text: str) -> Date | None:

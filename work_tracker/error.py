@@ -96,7 +96,6 @@ class CommandErrorInvalidMode(CommandError):
 
 @dataclass(frozen=True)
 class CommandErrorNotImplemented(CommandError):
-
     @property
     def message(self) -> str:
         return f"command '{self.command_name}' is not yet implemented."
@@ -129,6 +128,13 @@ class ParserErrorMultipleDates(ParserError):
     @property
     def message(self) -> str:
         return f"multiple dates were provided without any command. To change the active date, provide only one."
+
+
+@dataclass(frozen=True)
+class ParserErrorMultipleDatesInvalidSyntax(ParserError):
+    @property
+    def message(self) -> str:
+        return f"multiple dates require corresponding opening and closing symbol at the start and end of list of dates."
 
 
 @dataclass(frozen=True)
