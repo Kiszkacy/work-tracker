@@ -144,6 +144,10 @@ def random_date(request) -> Date:
     params: dict[str, any] = get_fixture_params(request)
     not_today: bool = params.get("not_today", False)
 
+    while date := generate_date():
+        if not_today and date == Date.today():
+            continue
+        break
     return generate_date()
 
 
