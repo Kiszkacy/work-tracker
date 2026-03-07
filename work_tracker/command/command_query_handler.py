@@ -50,11 +50,10 @@ class CommandQueryHandler:
 
     def run(self, query: CommandQuery):
         result: CommandHandlerResult = self._handlers[query.command.name].handle(query.dates, query.date_count, query.arguments, query.argument_count, self._readonly_app_state())
-
         if result.execute_after is not None:
             self._during_execute_after = True
-            for query in result.execute_after:
-                self.run(query)
+            for subquery in result.execute_after:
+                self.run(subquery)
             self._during_execute_after = False
 
         if result.undoable and not self._during_execute_after:
