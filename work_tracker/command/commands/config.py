@@ -12,7 +12,7 @@ from work_tracker.text.common import Color
 class ConfigHandler(CommandHandler):
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
-            yamllike_text: str = yaml.dump(Config.data.dict(), default_flow_style=False, sort_keys=False)
+            yamllike_text: str = yaml.dump(Config.data.model_dump(), default_flow_style=False, sort_keys=False)
             text_with_lines: list[str] = []
             for line in yamllike_text.splitlines():
                 text_with_lines.append(f"| {line}")
@@ -39,7 +39,7 @@ class ConfigHandler(CommandHandler):
 
     def _get_config_value_via_dot_keys(self, value_path: str, use_clean_copy: bool) -> any:
         keys: list[str] = value_path.split(".")
-        dictionary: dict[str, any] | any = Config.data.dict() if use_clean_copy else Config.data
+        dictionary: dict[str, any] | any = Config.data.model_dump() if use_clean_copy else Config.data
         for key in keys:
             if not isinstance(dictionary, BaseModel):
                 return None

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from path import Path
 import yaml
 from pydantic import BaseModel
 
@@ -37,6 +38,13 @@ class InputConfig(BaseModel):
     command_chain_symbol: str
     prefix: str
     sub_prefix: str
+    # v2
+    input_history_size: int
+    multi_date_start_symbol: str
+    multi_date_end_symbol: str
+    time_add_prefix: str
+    time_subtract_prefix: str
+    keyword_prefix: str
 
 
 class FrameConfig(BaseModel):
@@ -51,7 +59,7 @@ class OutputConfig(BaseModel):
     frame: FrameConfig
 
 
-__config_version__: int = 1
+__config_version__: int = 2
 
 
 class MainConfig(BaseModel):
@@ -60,25 +68,29 @@ class MainConfig(BaseModel):
     input: InputConfig
     output: OutputConfig
 
-    @classmethod
-    def load(cls) -> MainConfig:
-        with open(get_data_path().joinpath("config.yaml"), "r") as file:
-            raw_data: dict[str, any] = yaml.safe_load("".join(file))
-
-        if not cls._is_latest_config_version(raw_data):
-            cls._update_config_data_to_latest_version(raw_data)
-
-        return MainConfig(**raw_data)
-
     @staticmethod
     def _is_latest_config_version(raw_data: dict[str, any]) -> bool:
         return raw_data.get("version") == __config_version__
 
     @staticmethod
-    def _update_config_data_to_latest_version(raw_data: dict[str, any]) -> dict[str, any]:
+    def _update_config_data_to_v2(raw_data: dict[str, any]):
+        raw_data["input"]["input_history_size"] = raw_data["input"].get("input_history_size", 1000)
+        raw_data["input"]["multi_date_start_symbol"] = raw_data.pop("multi_date_start_symbol", "(")
+        raw_data["input"]["multi_date_end_symbol"] = raw_data.pop("multi_date_end_symbol", ")")
+        raw_data["input"]["time_add_prefix"] = raw_data.pop("time_add_prefix", "+")
+        raw_data["input"]["time_subtract_prefix"] = raw_data.pop("time_subtract_prefix", "-")
+        raw_data["input"]["keyword_prefix"] = raw_data.pop("keyword_prefix", "$")
+        
+        raw_data["version"] = 2
+        
+    @classmethod
+    def _update_config_data_to_latest_version(cls, raw_data: dict[str, any]):
         # just like data, update to target version step by step: A -> A+1 -> A+2 -> ... -> B
-        # remember to save the file, after update !
-        pass
+        current_version: int = raw_data.get("version", 1)
+
+        if current_version == 1:
+            cls._update_config_data_to_v2(raw_data)
+            current_version = 2
 
 
 class Config:
@@ -91,10 +103,32 @@ class Config:
     @classproperty
     def data(cls) -> MainConfig:
         if cls._data is None:
-            cls._data = MainConfig.load()
+            cls._load()
         return cls._data
+
+    @classproperty
+    def config_path(cls) -> Path:
+        return get_data_path().joinpath("config.yaml")
+
+    @classmethod
+    def _load(cls):
+        with open(cls.config_path, "r") as file:
+            raw_data: dict[str, any] = yaml.safe_load("".join(file))
+
+        was_updated: bool = False
+        if not MainConfig._is_latest_config_version(raw_data):
+            with open(get_data_path().joinpath("config.yaml.backup"), "w") as file:
+                file.write(yaml.safe_dump(raw_data, indent=4))
+            
+            MainConfig._update_config_data_to_latest_version(raw_data)
+            was_updated = True
+
+        cls._data = MainConfig(**raw_data)
+        if was_updated:
+            cls.save()
 
     @classmethod
     def save(cls):
-        with open(get_data_path().joinpath("config.yaml"), "w") as file:
-            file.write(yaml.safe_dump(cls.data.dict(), indent=4))
+        with open(cls.config_path, "w") as file:
+            file.write(yaml.safe_dump(cls.data.model_dump(), indent=4))
+

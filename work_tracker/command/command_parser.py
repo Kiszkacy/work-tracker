@@ -12,13 +12,6 @@ from work_tracker.common import month_map
 from work_tracker.config import Config
 
 
-# TODO move to config
-multi_command_dates_start_string: str = "("
-multi_command_dates_end_string: str = ")"
-time_argument_add_prefix_string: str = "+"
-time_argument_subtract_prefix_string: str = "-"
-
-
 class CommandParser:
     _date_pattern: str = r'^(?:(\d{1,2}))?\.(?:(\d{1,2})(?:\.(\d{1,2}|\d{4})?)?)?$' # e.g. DD.MM.YYYY, DD.MM.YY, DD.MM, DD., .MM., .MM.YYYY
     _year_pattern: str = r'^(\d{4})$' # e.g. YYYY
@@ -123,11 +116,11 @@ class CommandParser:
 
     @classmethod
     def _has_multi_command_dates(cls, parser: CommandTextParser) -> bool:
-        return parser.peak().startswith(multi_command_dates_start_string)
+        return parser.peak().startswith(Config.data.input.multi_date_start_symbol)
 
     @classmethod
     def _get_multi_command_dates(cls, parser: CommandTextParser) -> list[Date]:
-        if parser.peak() == multi_command_dates_start_string:
+        if parser.peak() == Config.data.input.multi_date_start_symbol:
             parser.next()
         return cls._get_dates(parser, multi_command_dates=True)
 
@@ -136,15 +129,15 @@ class CommandParser:
         parsed_dates: list[Date] = []
         force_break: bool = False
         first_word: bool = True
-        while word := parser.peak(): # TODO split the 'multi_command_dates_end_string' logic into _get_multi_command_dates ?
-            if multi_command_dates and first_word and word != multi_command_dates_start_string and word.startswith(multi_command_dates_start_string):
-                word = word[len(multi_command_dates_start_string):]
+        while word := parser.peak(): # TODO split the 'Config.data.input.multi_date_end_symbol' logic into _get_multi_command_dates ?
+            if multi_command_dates and first_word and word != Config.data.input.multi_date_start_symbol and word.startswith(Config.data.input.multi_date_start_symbol):
+                word = word[len(Config.data.input.multi_date_start_symbol):]
                 first_word = False
-            if multi_command_dates and word == multi_command_dates_end_string:
+            if multi_command_dates and word == Config.data.input.multi_date_end_symbol:
                 parser.next()
                 break
-            if multi_command_dates and word.endswith(multi_command_dates_end_string):
-                word = word[:-len(multi_command_dates_end_string)]
+            if multi_command_dates and word.endswith(Config.data.input.multi_date_end_symbol):
+                word = word[:-len(Config.data.input.multi_date_end_symbol)]
                 force_break = True
             
             date: Date | None = cls._extract_date(word)
@@ -233,15 +226,15 @@ class CommandParser:
         parser.checkpoint()
         argument_type: TimeArgumentType = TimeArgumentType.Overwrite
         text: str = parser.peak()
-        if text == time_argument_add_prefix_string:
+        if text == Config.data.input.time_add_prefix:
             argument_type = TimeArgumentType.Add
             parser.next()
-        elif text.startswith(time_argument_add_prefix_string):
+        elif text.startswith(Config.data.input.time_add_prefix):
             argument_type = TimeArgumentType.Add
-        elif text == time_argument_subtract_prefix_string:
+        elif text == Config.data.input.time_subtract_prefix:
             argument_type = TimeArgumentType.Subtract
             parser.next()
-        elif text.startswith(time_argument_subtract_prefix_string):
+        elif text.startswith(Config.data.input.time_subtract_prefix):
             argument_type = TimeArgumentType.Subtract
 
         minutes: int = cls._get_minute_count(parser)
@@ -307,10 +300,10 @@ class CommandParser:
         if text is None:
             parser.go_to_checkpoint()
             return None
-        elif text.startswith(time_argument_add_prefix_string):
-            text = text[len(time_argument_add_prefix_string):]
-        elif text.startswith(time_argument_subtract_prefix_string):
-            text = text[len(time_argument_subtract_prefix_string):]
+        elif text.startswith(Config.data.input.time_add_prefix):
+            text = text[len(Config.data.input.time_add_prefix):]
+        elif text.startswith(Config.data.input.time_subtract_prefix):
+            text = text[len(Config.data.input.time_subtract_prefix):]
 
         minutes: int = cls._extract_minute_count(text)
         if minutes is not None:

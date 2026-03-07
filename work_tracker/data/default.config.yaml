@@ -21,6 +21,12 @@ input:
     command_chain_symbol: '&&'
     prefix: '>>'
     sub_prefix: ':'
+    input_history_size: 1000
+    multi_date_end_symbol: )
+    multi_date_start_symbol: (
+    time_add_prefix: +
+    time_subtract_prefix: '-'
+    keyword_prefix: $
 output:
     frame:
         padding: 1
@@ -28,4 +34,4 @@ output:
         title_left_side_padding: 2
         title_padding: 1
     max_width: 80
-version: 1
+version: 2
