@@ -23,6 +23,12 @@ class TestInputOutput:
     _output_queue: list[str] = []
 
     @classmethod
+    def clear(cls):
+        cls._text = ""
+        cls._input_queue = []
+        cls._output_queue = []
+
+    @classmethod
     def reset_text(cls):
         cls._text = ""
 
@@ -136,6 +142,11 @@ def handle_call(
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_environment():
     WorkTracker()._create_basic_files()
+
+
+@pytest.fixture(autouse=True)
+def reset_io_buffer():
+    TestInputOutput.clear()
 
 
 def get_fixture_params(request) -> dict[str, any]:
