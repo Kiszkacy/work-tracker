@@ -22,9 +22,7 @@ class HelpHandler(CommandHandler):
                     frame_wrap=True
                 )
 
-                if command.name in ["block", "calculate", "info", "recalculate", "setup"]:
-                    color = Color.Red if index % 2 == 1 else Color.Brightred
-                elif index % 2 == 1:
+                if index % 2 == 1:
                     color = Color.Brightblack
                 else:
                     color = Color.Reset
@@ -33,7 +31,6 @@ class HelpHandler(CommandHandler):
             wrapped_text: str = "\n".join(descriptions)
             wrapped_footer_text: str = wrap_text(
                 text=(
-                    f" Commands not yet implemented are marked by {Color.Brightred.value}red{Color.Reset.value} color."
                     f"\nType {Color.Brightblue.value}help <command_name>{Color.Reset.value} to display detailed help description about a specific command."
                 ).strip(),
                 frame_wrap=True

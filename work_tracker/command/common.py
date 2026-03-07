@@ -99,24 +99,6 @@ class KeyManager: # TODO shorten codes
 
 _global_command_templates: list[CommandTemplate] = [
     CommandTemplate(
-        name="block",
-        help=CommandHelp(
-            full_use_case_template="block",
-            short_help_description="Prevents a date from being reset during recalculation",
-            full_help_description=(
-                " Marks the date as blocked, ensuring that its data is preserved when running 'calculate' or 'recalculate'."
-                " Both commands will skip resetting a blocked date, preserving its existing values while still updating the rest of the schedule."
-                " This allows you to protect specific dates from being overwritten while still updating the rest of the schedule automatically."
-            ).strip(),
-            use_case_description=[
-                CommandUseCaseDescription({Mode.Today, Mode.Day}, "block", ""),
-            ],
-        ),
-        supported_modes={Mode.Today, Mode.Day},
-        abbreviations=[],
-        valid_argument_types=[[]],
-    ),
-    CommandTemplate(
         name="calendar",
         help=CommandHelp(
             full_use_case_template="calendar",
@@ -128,23 +110,6 @@ _global_command_templates: list[CommandTemplate] = [
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "calendar", ""),
-            ],
-        ),
-        supported_modes=set(Mode),
-        abbreviations=[],
-        valid_argument_types=[[]],
-    ),
-    CommandTemplate(
-        name="calculate",
-        help=CommandHelp(
-            full_use_case_template="calculate",
-            short_help_description="Calculates the schedule based on the setup parameters",
-            full_help_description=(
-                " Calculates the work schedule for the given month according to the parameters set during the setup process."
-                " This is a 'hard reset' of the data, meaning that any previously entered data for specific dates will be overwritten."
-            ).strip(),
-            use_case_description=[
-                CommandUseCaseDescription(set(Mode), "calculate", ""),
             ],
         ),
         supported_modes=set(Mode),
@@ -485,26 +450,6 @@ _global_command_templates: list[CommandTemplate] = [
         valid_argument_types=[[]],
     ),
     CommandTemplate(
-        name="recalculate",
-        help=CommandHelp(
-            full_use_case_template="recalculate",
-            short_help_description="Recalculates the schedule while preserving data before and including the active date",
-            full_help_description=(
-                " Recalculates the work schedule for the given month based on the parameters set during the setup process."
-                " Unlike 'calculate', which performs a 'hard reset' of the entire schedule, 'recalculate' updates only the data"
-                " from the next date onward. Any data before and including the active date remains unchanged, ensuring past records"
-                " and the current day's data are preserved. "
-                " This allows for automatic updates while maintaining consistency with previously recorded work data."
-            ).strip(),
-            use_case_description=[
-                CommandUseCaseDescription(set(Mode), "recalculate", ""),
-            ],
-        ),
-        supported_modes=set(Mode),
-        abbreviations=[],
-        valid_argument_types=[[]],
-    ),
-    CommandTemplate(
         name="redo",
         help=CommandHelp(
             full_use_case_template="redo",
@@ -572,30 +517,6 @@ _global_command_templates: list[CommandTemplate] = [
         supported_modes=set(Mode),
         abbreviations=[],
         valid_argument_types=[[], [Number]],
-    ),
-    CommandTemplate(
-        name="setup",
-        help=CommandHelp(
-            full_use_case_template="setup [info]",
-            short_help_description="Starts the setup process or displays the current configuration",
-            full_help_description=(
-                " Starts the setup mode, where the user is prompted with a series of questions to configure their work schedule,"
-                " including preferred work days, hours, and other relevant parameters, within the context of the given month. If no"
-                " month is provided, the setup will be applied to the currently active date's month."
-                " The setup for the previous month is automatically used for the next month if no new setup was provided."
-                " Once setup is complete, the user must call the 'calculate' method to automatically generate the work schedule for the given month."
-                " The 'recalculate' method can be used to refresh the schedule while respecting any manually entered data for specific dates, unlike"
-                " 'calculate' which performs a 'hard reset' of the data."
-                "\nAdditionaly, 'setup info' displays the current configuration including all set parameters."
-            ).strip(),
-            use_case_description=[
-                CommandUseCaseDescription(set(Mode), "setup", "starts the setup process, prompting the user for configuration options."),
-                CommandUseCaseDescription(set(Mode), "setup <info>", "displays the current configuration with all set parameters."),
-            ],
-        ),
-        supported_modes=set(Mode),
-        abbreviations=[],
-        valid_argument_types=[[], [str]],
     ),
     CommandTemplate(
         name="start",

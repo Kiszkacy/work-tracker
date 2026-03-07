@@ -107,13 +107,6 @@ class WorkTracker:
             else:
                 self.io.output("Invalid country code. Please input valid contry code.", color=Color.Brightred)
 
-        self.io.output("Would you like to run the initial setup? This process can take some time but is recommended, as it enables the app to automatically fill your calendar with the suggested work schedule.")
-        user_input: str = self.io.input(f"{Config.data.input.prefix} ", custom_autocomplete=["yes", "no"])
-        if "yes".startswith(user_input):
-            self.io.output("Setup command is not yet implemented. Skipping setup phase...", color=Color.Brightred)
-        else:
-            self.io.output(f"Initial setup skipped. You can always run setup later by using {Color.Brightblue.value}setup{Color.Reset.value} command.")
-
         self.data = AppData(country_code=country_code)
         CheckpointManager.save("initial", self.data)
 
