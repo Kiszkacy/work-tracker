@@ -7,7 +7,9 @@ from pytest_mock import MockerFixture
 
 from work_tracker.command.command_handler import CommandHandler, CommandHandlerResult
 from work_tracker.command.command_history import CommandHistoryEntry
+from work_tracker.command.commands.calendar import CalendarHandler
 from work_tracker.command.commands.clear import ClearHandler
+from work_tracker.command.commands.exit import ExitHandler
 from work_tracker.command.commands.fte import FteHandler
 from work_tracker.command.common import CommandArgument
 from work_tracker.common import AppData, Date, Mode, ReadonlyAppState, classproperty
@@ -130,18 +132,24 @@ def handle_call(
     return result
 
 
+def get_fixture_params(request) -> dict[str, any]:
+    params: dict[str, any] = {}
+    if hasattr(request, "param"):
+        params = request.param if isinstance(request.param, dict) else {}
+    return params
+
+
 @pytest.fixture(scope="function")
-def random_date() -> Date:
+def random_date(request) -> Date:
+    params: dict[str, any] = get_fixture_params(request)
+    not_today: bool = params.get("not_today", False)
+
     return generate_date()
 
 
 @pytest.fixture(scope="function")
 def random_dates(request) -> list[Date]:
-    params: dict[str, any]
-    if not hasattr(request, "param"):
-        params = {}
-    else:
-        params = request.param if isinstance(request.param, dict) else {}
+    params: dict[str, any] = get_fixture_params(request)
     count: int = params.get("count", 5) # default count = 5
     unique_month_data: bool = params.get("unique_month_data", False)
 
@@ -165,8 +173,24 @@ def random_dates(request) -> list[Date]:
 
 
 @pytest.fixture(scope="function")
+def calendar_handler(mocker: MockerFixture) -> CalendarHandler:
+    return CalendarHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
 def clear_handler(mocker: MockerFixture) -> ClearHandler:
     return ClearHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def exit_handler(mocker: MockerFixture) -> ExitHandler:
+    return ExitHandler(
         work_data=sample_data(),
         io=mock_io(mocker)
     )
