@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
+from work_tracker import WorkTracker
 from work_tracker.command.command_handler import CommandHandler, CommandHandlerResult
 from work_tracker.command.command_history import CommandHistoryEntry
 from work_tracker.command.commands.calendar import CalendarHandler
@@ -130,6 +131,11 @@ def handle_call(
     )
 
     return result
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_environment():
+    WorkTracker()._create_basic_files()
 
 
 def get_fixture_params(request) -> dict[str, any]:
