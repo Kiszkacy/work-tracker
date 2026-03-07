@@ -58,7 +58,9 @@ class CommandQueryHandler:
             self._during_execute_after = False
 
         if result.undoable and not self._during_execute_after:
-            self._history.add(KeyManager.encode(self.data), query.raw_text)
+            # TODO: move these to config and use config, hardcoded for now so i dont get any looped imports
+            multi_dates_text: str = ("(" + query.raw_full_input.split("(")[1].split(")")[0] + ") ") if query.multi_dates_count != 0 and query.order_index != 0 else ''
+            self._history.add(KeyManager.encode(self.data), f"{multi_dates_text}{query.raw_text}")
         if result.error is not None:
             self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.Brightred)
         if result.change_active_date is not None:

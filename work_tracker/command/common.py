@@ -64,9 +64,15 @@ class CommandQuery:
     command: Command
     dates: list[Date]
     date_count: int
+    own_dates: list[Date]
+    own_date_count: int
+    multi_dates: list[Date]
+    multi_dates_count: int
     arguments: list[CommandArgument]
     argument_count: int
     raw_text: str
+    raw_full_input: str
+    order_index: int
 
 
 @dataclass(frozen=True)

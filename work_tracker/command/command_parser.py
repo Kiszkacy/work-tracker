@@ -28,6 +28,7 @@ class CommandParser:
 
     @classmethod
     def parse(cls, text: str) -> ParseResult:
+        original_text: str = text
         text = re.sub(r"\s+", " ", text)
         text_per_command: list[str] = cls._split_text_per_command(text)
         queries: list[CommandQuery] = []
@@ -93,9 +94,15 @@ class CommandParser:
                 command=command,
                 dates=final_dates,
                 date_count=len(final_dates),
+                own_dates=dates,
+                own_date_count=len(dates),
+                multi_dates=multi_dates,
+                multi_dates_count=len(multi_dates),
                 arguments=command_arguments,
                 argument_count=len(command_arguments),
-                raw_text=text
+                raw_text=text,
+                raw_full_input=original_text,
+                order_index=index
             ))
 
         return ParseResult(
