@@ -37,7 +37,7 @@ class CommandParser:
             
             is_first_command_in_chain: bool = index == 0
             if is_first_command_in_chain and cls._has_multi_command_dates(parser):
-                multi_dates = cls._get_multi_command_dates(parser) # TODO fix, this does not check if the multi_end_string is required so input '(<date> <date>...' is valid
+                multi_dates = cls._get_multi_command_dates(parser)
                 if len(multi_dates) == 0:
                     error = ParserErrorMultipleDatesInvalidSyntax()
                     break
