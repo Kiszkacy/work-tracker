@@ -68,7 +68,7 @@ class Color(Enum): # TODO rethink these names
         try:
             if len(key) != 0 and "_" in key and key[0] != "_" and key[-1] != 0:
                 bg, rest = key.split("_", 1)
-                return Color[f"{bg.upper(), rest.capitalize()}"]
+                return Color[f"{bg.upper()}_{rest.capitalize()}"]
             else:
                 return Color[key.capitalize()]
         except KeyError:
