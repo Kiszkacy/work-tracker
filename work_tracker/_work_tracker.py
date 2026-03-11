@@ -7,6 +7,7 @@ import sys
 import traceback
 from pathlib import Path
 
+from packaging.version import parse as parse_version
 from workalendar.registry import registry
 
 from work_tracker import __version__
@@ -32,6 +33,7 @@ class WorkTracker:
     def initialize(self, check_is_new_version_available: bool = True):
         self._initialized = True
 
+        previously_installed_version: str | None = self._get_previously_installed_version()
         if is_first_time_launch := self._is_first_time_launch():
             self._create_basic_files()
         if was_version_file_missing := self._is_version_file_missing():
@@ -40,6 +42,8 @@ class WorkTracker:
             self._create_default_config_file()
         if was_macros_file_missing := self._is_macros_file_missing():
             self._create_default_macros_file()
+        if was_aliases_file_missing := self._is_aliases_file_missing():
+            self._create_default_aliases_file()
         if was_updated_since_last_launch := self._was_updated_since_last_launch():
             self._update_version_file()
 
@@ -57,6 +61,11 @@ class WorkTracker:
                 self.io.output("WARNING: config file could not be found. Default config will be used instead.", color=Color.Yellow)
             if was_macros_file_missing:
                 self.io.output("WARNING: macros file could not be found. Default macros will be used instead.", color=Color.Yellow)
+            if was_aliases_file_missing:
+                if was_updated_since_last_launch and previously_installed_version is not None and parse_version(previously_installed_version) < parse_version("0.2.0"):
+                    self.io.output("UPDATE: creating default aliases file due to version update.", color=Color.Brightblue)
+                else:
+                    self.io.output("WARNING: aliases file could not be found. Default aliases will be used instead.", color=Color.Yellow)
 
         if not is_first_time_launch:
             self._load_data()
@@ -73,19 +82,31 @@ class WorkTracker:
             self._display_new_version_available_message(latest_version)
         self.io.output(f"Using {Color.Brightblue.value}WorkTracker{Color.Clear.value} version {Color.Brightblue.value}{__version__}{Color.Clear.value}.")
 
+    def _get_previously_installed_version(self) -> str | None:
+        version_path: Path = get_data_path().joinpath("version")
+        if not version_path.exists():
+            return None
+
+        with open(version_path, "r") as file:
+            return file.read()
+
     def _is_first_time_launch(self) -> bool:
-        expected_files: list[Path] = [get_data_path().joinpath("version"), get_data_path().joinpath("config.yaml"), get_data_path().joinpath("macros.txt")]
+        expected_files: list[Path] = [get_data_path().joinpath("version"), get_data_path().joinpath("config.yaml"), get_data_path().joinpath("macros.txt"), get_data_path().joinpath("aliases.txt")]
         return all(not path.exists() for path in expected_files)
 
     def _create_basic_files(self):
         self._create_default_config_file()
         self._create_default_macros_file()
+        self._create_default_aliases_file()
 
     def _create_default_config_file(self):
         shutil.copy(Path(__file__).parent.joinpath("data/default.config.yaml"), get_data_path().joinpath("config.yaml"))
 
     def _create_default_macros_file(self):
         shutil.copy(Path(__file__).parent.joinpath("data/default.macros.txt"), get_data_path().joinpath("macros.txt"))
+
+    def _create_default_aliases_file(self):
+        shutil.copy(Path(__file__).parent.joinpath("data/default.aliases.txt"), get_data_path().joinpath("aliases.txt"))
 
     def _initialize_io(self):
         self.io = InputOutputHandler()
@@ -124,6 +145,9 @@ class WorkTracker:
 
     def _is_macros_file_missing(self) -> bool:
         return not get_data_path().joinpath("macros.txt").exists() # TODO make file name a constant
+
+    def _is_aliases_file_missing(self) -> bool:
+        return not get_data_path().joinpath("aliases.txt").exists() # TODO make file name a constant
 
     def _was_updated_since_last_launch(self) -> bool:
         path: Path = get_data_path().joinpath("version")

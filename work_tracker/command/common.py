@@ -6,7 +6,6 @@ from enum import Enum, auto
 from types import UnionType
 
 from work_tracker.common import AppData, Date, Mode
-# from work_tracker.error import ParserError
 from work_tracker.text.common import Color
 
 
@@ -98,6 +97,30 @@ class KeyManager: # TODO shorten codes
 
 
 _global_command_templates: list[CommandTemplate] = [
+    CommandTemplate(
+        name="alias",
+        help=CommandHelp(
+            full_use_case_template="(alias [name]) | (alias <name> <replacement_text...>)",
+            short_help_description="Displays, updates or creates aliases",
+            full_help_description=(
+                f" Aliases are simple text replacements that occur before command parsing."
+                f" When an alias is detected at the beginning of user input, it is expanded to its replacement text."
+                f" Unlike macros, aliases do not support arguments and are purely text-based substitutions."
+                f" Aliases can be layered, meaning one alias can reference another."
+                f"\n\nTo avoid any problems during the alias definition, it is recommended to enclose the entire command sequence of the macro in quotes (single or double)."
+                f" For example to define an alias that during runtime replaces the word {Color.Brightblue.value}ha{Color.Reset.value} with {Color.Brightblue.value}help alias{Color.Reset.value}, you would type the following:"
+                f'\n  {Color.Blue.value}>> {Color.Brightblue.value}alias ha "help alias"{Color.Reset.value}'
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "alias", "displays all available aliases"),
+                CommandUseCaseDescription(set(Mode), "alias <name>", "displays the definition of the specified alias"),
+                CommandUseCaseDescription(set(Mode), "alias <name> <replacement_text...>", "creates or overwrites an alias with the given name"),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=[],
+        valid_argument_types=[[], [str], [str, str, ...]],
+    ),
     CommandTemplate(
         name="calendar",
         help=CommandHelp(
@@ -210,6 +233,22 @@ _global_command_templates: list[CommandTemplate] = [
         supported_modes=set(Mode),
         abbreviations=[],
         valid_argument_types=[[TimeArgument], [str, TimeArgument], [TimeArgument, str], [str, TimeArgument, str]],
+    ),
+    CommandTemplate(
+        name="deletealias",
+        help=CommandHelp(
+            full_use_case_template="deletealias <name>",
+            short_help_description="Deletes the specified alias",
+            full_help_description=(
+                " Deletes the alias identified by the given name."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "deletealias <name>", "deletes the alias with the specified name"),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=[],
+        valid_argument_types=[[str]],
     ),
     CommandTemplate(
         name="deletemacro",
@@ -395,9 +434,11 @@ _global_command_templates: list[CommandTemplate] = [
                 f" Macros act as reusable command sequences, allowing users to define custom methods that execute multiple commands (or other macros) in order."
                 f" A macro consists of an identifier (name) and optional or required arguments, which can be used within the command sequence."
                 f" Macros can also function as simple aliases for other commands."
-                f"\n\nMacro arguments must be specified using the format {Color.Brightblue.value}<argument_name>{Color.Reset.value}, and the first word after the macro identifier (excluding arguments in {Color.Brightblue.value}<>{Color.Reset.value}) marks the beginning of the macro's command sequence."
+                f"\n\nMacro arguments must be specified using the format {Color.Brightblue.value}<argument_name>{Color.Reset.value},"
+                f" and the first word after the macro identifier (excluding arguments in {Color.Brightblue.value}<>{Color.Reset.value}) marks the beginning of the macro's command sequence."
                 f" These arguments can be referenced throughout the sequence by using the format {Color.Brightblue.value}<argument_name>{Color.Reset.value}."
                 f"\n\nTo avoid any problems during the macro definition, it is recommended to enclose the entire command sequence of the macro in quotes (single or double)."
+                f" This makes the text inside the quotes treated as a literal string, preventing any issues with special characters or spaces in the command sequence."
                 f" For example, defining a macro called {Color.Brightblue.value}custom-help{Color.Reset.value} that runs {Color.Brightblue.value}help{Color.Reset.value} on a user-specified command name (or 'macro' if no name is provided) would look like this:"
                 f'\n  {Color.Blue.value}>> {Color.Brightblue.value}macro custom-help <command_name=macro> "help <command_name>"{Color.Reset.value}'
             ).strip(),

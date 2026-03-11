@@ -3,6 +3,7 @@ import re
 from fractions import Fraction
 from typing import get_origin, get_args
 
+from work_tracker.command.alias_manager import AliasManager
 from work_tracker.command.command_manager import CommandManager
 from work_tracker.command.command_text_parser import CommandTextParser
 from work_tracker.command.common import Command, CommandQuery, Date, CommandArgument, TimeArgument, TimeArgumentType, ParseResult, Number, AdditionalInputArgument
@@ -23,6 +24,7 @@ class CommandParser:
     def parse(cls, text: str) -> ParseResult:
         original_text: str = text
         text = re.sub(r"\s+", " ", text)
+        text = cls.expand_aliases(text)
         text_per_command: list[str] = cls._split_text_per_command(text)
         queries: list[CommandQuery] = []
         error: ParserError | None = None
@@ -105,6 +107,35 @@ class CommandParser:
             queries=queries,
             error=error,
         )
+    
+    @classmethod
+    def expand_aliases(cls, text: str, max_depth: int = 32) -> str:
+        token_pattern: re.Pattern = re.compile(r'("[^"]*"|\'[^\']*\'|\S+)') # respect text inside quotes, dont expand aliases inside
+
+        for _ in range(max_depth):
+            tokens: list[str] = token_pattern.findall(text)
+            if not tokens:
+                break
+
+            changed: bool = False
+            result: list[str] = []
+            for token in tokens:
+                is_quoted: bool = (token.startswith('"') and token.endswith('"')) or \
+                                  (token.startswith("'") and token.endswith("'"))
+
+                if not is_quoted and token.lower() in AliasManager.aliases:
+                    replacement_text: str = AliasManager.aliases[token.lower()].replacement_text
+                    result.extend(replacement_text.split())
+                    changed = True
+                else:
+                    result.append(token)
+
+            if not changed:
+                break
+
+            text = " ".join(result)
+
+        return text
 
     @classmethod
     def _split_text_per_command(cls, text: str) -> list[str]: # TODO add tests

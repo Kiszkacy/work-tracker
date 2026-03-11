@@ -1,6 +1,5 @@
 1
-h <command=null> | help <command>
-e | exit
-c <month=null> | <month> calendar
 o8 | office && 8:00
 r8 | remote && 8:00
+o <amount> | office && target <amount> 
+r <amount> | remote && target <amount> 
