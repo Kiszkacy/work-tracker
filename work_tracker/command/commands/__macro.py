@@ -60,7 +60,7 @@ class __MacroHandler(CommandHandler):
         for index, argument_identifier in enumerate(macro.arguments):
             command_text = command_text.replace(f"<{argument_identifier}>", macro_arguments[index])
 
-        interpret_result: ParseResult = CommandParser.parse(command_text)
+        interpret_result: ParseResult = CommandParser.parse(command_text, state)
         if interpret_result.error is not None:
             return CommandHandlerResult(
                 undoable=False,

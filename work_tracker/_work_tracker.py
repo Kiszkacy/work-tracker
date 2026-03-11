@@ -225,7 +225,7 @@ class WorkTracker:
                 user_input: str = self.get_user_input(prefix)
                 error_log_last_processed_input = user_input
 
-                result: ParseResult = CommandParser.parse(user_input)
+                result: ParseResult = CommandParser.parse(user_input, self.state)
                 if result.error:
                     self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.Brightred)
                     continue

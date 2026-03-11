@@ -426,6 +426,22 @@ _global_command_templates: list[CommandTemplate] = [
         valid_argument_types=[[], [str]],
     ),
     CommandTemplate(
+        name="keyword",
+        help=CommandHelp(
+            full_use_case_template="keyword",
+            short_help_description="Displays a list of all available keywords with their descriptions and supported modes",
+            full_help_description=(
+                " Displays all available keywords, including their descriptions and the modes they support."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "keyword", ""),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=[],
+        valid_argument_types=[[]],
+    ),
+    CommandTemplate(
         name="macro",
         help=CommandHelp(
             full_use_case_template="(macro [name]) | (macro {argument} <command_text...>)",

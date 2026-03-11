@@ -7,9 +7,10 @@ from work_tracker.command.alias_manager import AliasManager
 from work_tracker.command.command_manager import CommandManager
 from work_tracker.command.command_text_parser import CommandTextParser
 from work_tracker.command.common import Command, CommandQuery, Date, CommandArgument, TimeArgument, TimeArgumentType, ParseResult, Number, AdditionalInputArgument
+from work_tracker.command.keyword_manager import KeywordManager
 from work_tracker.error import ParserError, ParserErrorMultipleDates, ParserErrorInvalidArgumentCount, ParserErrorInvalidArgumentTypes, ParserErrorUnknownCommand, ParserErrorMultipleDatesInvalidSyntax
 from work_tracker.command.macro_manager import MacroManager
-from work_tracker.common import month_map
+from work_tracker.common import ReadonlyAppState, month_map
 from work_tracker.config import Config
 
 
@@ -21,10 +22,11 @@ class CommandParser:
     _time_pattern: str = r'^\d+:\d{2}$' # e.g. 1:20, 2:30
 
     @classmethod
-    def parse(cls, text: str) -> ParseResult:
+    def parse(cls, text: str, state: ReadonlyAppState) -> ParseResult:
         original_text: str = text
         text = re.sub(r"\s+", " ", text)
         text = cls.expand_aliases(text)
+        text = cls.activate_keywords(text, state)
         text_per_command: list[str] = cls._split_text_per_command(text)
         queries: list[CommandQuery] = []
         error: ParserError | None = None
@@ -135,6 +137,28 @@ class CommandParser:
 
             text = " ".join(result)
 
+        return text
+    
+    @classmethod
+    def activate_keywords(cls, text: str, state: ReadonlyAppState) -> str:
+        prefix: str = Config.data.input.keyword_prefix
+        
+        token_pattern: re.Pattern = re.compile(r'("[^"]*"|\'[^\']*\'|\S+)')
+        tokens: list[str] = token_pattern.findall(text)
+        
+        for token in tokens:
+            is_quoted: bool = (token.startswith('"') and token.endswith('"')) or \
+                              (token.startswith("'") and token.endswith("'"))
+            if is_quoted:
+                continue
+            
+            if token.startswith(prefix):
+                keyword_without_prefix: str = token[len(prefix):]
+                if keyword_without_prefix.lower() in KeywordManager.keywords:
+                    value: str = KeywordManager.get_keyword_value(keyword_without_prefix, state)
+                    if value:
+                        text = text.replace(token, value)
+        
         return text
 
     @classmethod
