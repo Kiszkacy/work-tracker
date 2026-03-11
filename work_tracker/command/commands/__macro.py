@@ -1,8 +1,9 @@
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.command_parser import CommandParser
-from work_tracker.command.common import CommandArgument, ParseResult, CommandQuery
+from work_tracker.command.common import CommandArgument, ParseResult, CommandQuery, TimeArgument, TimeArgumentType
 from work_tracker.command.macro_manager import MacroManager, MacroTemplate
 from work_tracker.common import Date, ReadonlyAppState
+from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorCustom
 from dataclasses import replace
 
@@ -55,7 +56,7 @@ class __MacroHandler(CommandHandler):
             )
 
         macro_arguments: list[str] = macro.default_argument_values.copy()
-        macro_arguments[:len(given_arguments)] = given_arguments
+        macro_arguments[:len(given_arguments)] = [self._format_argument(argument) for argument in given_arguments]
         command_text: str = macro.command_text
         for index, argument_identifier in enumerate(macro.arguments):
             command_text = command_text.replace(f"<{argument_identifier}>", macro_arguments[index])
@@ -75,3 +76,14 @@ class __MacroHandler(CommandHandler):
             new_dates: list[Date] = query.dates + dates
             queries[index] = replace(query, dates=new_dates, date_count=new_dates.__len__())
         return CommandHandlerResult(undoable=True, execute_after=queries)
+
+    @staticmethod
+    def _format_argument(argument: CommandArgument) -> str:
+        if isinstance(argument, TimeArgument):
+            if argument.type == TimeArgumentType.Add:
+                return f"{Config.data.input.time_add_prefix}{argument.minutes}m"
+            elif argument.type == TimeArgumentType.Subtract:
+                return f"{Config.data.input.time_subtract_prefix}{argument.minutes}m"
+            else:
+                return f"{argument.minutes}m"
+        return str(argument)
