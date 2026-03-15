@@ -79,7 +79,10 @@ class WorkTracker:
         self._clear_old_cache()
 
         if not was_updated_since_last_launch and check_is_new_version_available and (latest_version := self._is_new_version_available()) is not None:
-            self._display_new_version_available_message(latest_version)
+            if parse_version(latest_version) > parse_version(__version__):
+                self._display_new_version_available_message(latest_version)
+            elif parse_version(latest_version) < parse_version(__version__):
+                self._display_running_newer_version_message(latest_version)
         self.io.output(f"Using {Color.Brightblue.value}WorkTracker{Color.Clear.value} version {Color.Brightblue.value}{__version__}{Color.Clear.value}.")
 
     def _get_previously_installed_version(self) -> str | None:
@@ -187,6 +190,9 @@ class WorkTracker:
     def _display_new_version_available_message(self, version: str):
         self.io.write(f"New version {Color.Brightcyan.value}{version}{Color.Reset.value} is available!", end=" ")
         self.io.output(f"Update with {Color.Brightblue.value}pip install --upgrade work-tracker{Color.Reset.value}.")
+
+    def _display_running_newer_version_message(self, latest_version_on_pip: str):
+        self.io.output(f"It seems like you are running a newer version ({Color.Brightblue.value}{__version__}{Color.Reset.value}) than the one available on pip ({Color.Brightblue.value}{latest_version_on_pip}{Color.Reset.value}). This may be the case if you are running a development version or if there was an issue retrieving the latest version from pip. {Color.Brightred.value}If you think this is an error, please report it{Color.Reset.value}.")
 
     def _clear_old_cache(self):
         CheckpointManager.clear_cache()
