@@ -1,3 +1,6 @@
+from dataclasses import replace
+from typing import Any
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.command_parser import CommandParser
 from work_tracker.command.common import CommandArgument, ParseResult, CommandQuery, TimeArgument, TimeArgumentType
@@ -5,7 +8,6 @@ from work_tracker.command.macro_manager import MacroManager, MacroTemplate
 from work_tracker.common import Date, ReadonlyAppState
 from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorCustom
-from dataclasses import replace
 
 
 class __MacroHandler(CommandHandler):
@@ -72,8 +74,8 @@ class __MacroHandler(CommandHandler):
             )
 
         queries: list[CommandQuery] = interpret_result.queries
-        for index, query in enumerate(queries): # TODO: this is quite ugly, but works, here date normalization is OMITTED !
-            new_dates: list[Date] = query.dates + dates
+        for index, query in enumerate(queries): # TODO: this is quite ugly, but works
+            new_dates: list[Date] = Date.normalize_dates(query.dates + dates, preserve_order=True) if Config.data.input.date.normalize else query.dates + dates
             queries[index] = replace(query, dates=new_dates, date_count=new_dates.__len__())
         return CommandHandlerResult(undoable=True, execute_after=queries)
 
@@ -81,9 +83,9 @@ class __MacroHandler(CommandHandler):
     def _format_argument(argument: CommandArgument) -> str:
         if isinstance(argument, TimeArgument):
             if argument.type == TimeArgumentType.Add:
-                return f"{Config.data.input.time_add_prefix}{argument.minutes}m"
+                return f"{Config.data.input.time.add_prefix}{argument.minutes}m"
             elif argument.type == TimeArgumentType.Subtract:
-                return f"{Config.data.input.time_subtract_prefix}{argument.minutes}m"
+                return f"{Config.data.input.time.subtract_prefix}{argument.minutes}m"
             else:
                 return f"{argument.minutes}m"
         return str(argument)

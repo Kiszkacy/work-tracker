@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from path import Path
 import yaml
+from path import Path
 from pydantic import BaseModel
 
 from work_tracker.common import get_data_path, classproperty
@@ -44,6 +44,7 @@ class HelpCommandConfig(BaseModel):
 class RwrCommandConfig(BaseModel): # v2
     default_value: float
 
+
 class CommandConfig(BaseModel):
     undo_history_size: int
     calendar: CalendarCommandConfig
@@ -53,17 +54,26 @@ class CommandConfig(BaseModel):
     rwr: RwrCommandConfig
 
 
+class InputDateConfig(BaseModel):
+    multi_start_symbol: str
+    multi_end_symbol: str
+    normalize: bool
+
+
+class InputTimeConfig(BaseModel):
+    add_prefix: str
+    subtract_prefix: str
+
+
 class InputConfig(BaseModel):
     command_chain_symbol: str
     prefix: str
     sub_prefix: str
     # v2
-    input_history_size: int
-    multi_date_start_symbol: str
-    multi_date_end_symbol: str
-    time_add_prefix: str
-    time_subtract_prefix: str
     keyword_prefix: str
+    history_size: int
+    date: InputDateConfig
+    time: InputTimeConfig
 
 
 class FrameConfig(BaseModel):
@@ -95,12 +105,15 @@ class MainConfig(BaseModel):
 
     @staticmethod
     def _update_config_data_to_v2(raw_data: dict[str, Any]):
-        raw_data["input"]["input_history_size"] = raw_data["input"].get("input_history_size", 1000)
-        raw_data["input"]["multi_date_start_symbol"] = raw_data.pop("multi_date_start_symbol", "(")
-        raw_data["input"]["multi_date_end_symbol"] = raw_data.pop("multi_date_end_symbol", ")")
-        raw_data["input"]["time_add_prefix"] = raw_data.pop("time_add_prefix", "+")
-        raw_data["input"]["time_subtract_prefix"] = raw_data.pop("time_subtract_prefix", "-")
+        raw_data["input"]["history_size"] = raw_data["input"].get("history_size", 1000)
         raw_data["input"]["keyword_prefix"] = raw_data.pop("keyword_prefix", "$")
+        raw_data["input"].setdefault("date", {})
+        raw_data["input"]["date"]["multi_start_symbol"] = raw_data.pop("multi_start_symbol", "(")
+        raw_data["input"]["date"]["multi_end_symbol"] = raw_data.pop("multi_end_symbol", ")")
+        raw_data["input"]["date"]["normalize"] = raw_data.pop("normalize", False)
+        raw_data["input"].setdefault("time", {})
+        raw_data["input"]["add_prefix"] = raw_data.pop("add_prefix", "+")
+        raw_data["input"]["subtract_prefix"] = raw_data.pop("subtract_prefix", "-")
 
         raw_data["command"]["calendar"]["absence_background_color"] = raw_data["command"]["calendar"].get("absence_background_color", None)
         raw_data["command"]["calendar"]["absence_foreground_color"] = raw_data["command"]["calendar"].get("absence_foreground_color", "brightblue")

@@ -28,15 +28,18 @@ command:
         default_value: 0.4
     undo_history_size: 50
 input:
-    command_chain_symbol: '&&'
     prefix: '>>'
     sub_prefix: ':'
-    input_history_size: 1000
-    multi_date_end_symbol: )
-    multi_date_start_symbol: (
-    time_add_prefix: +
-    time_subtract_prefix: '-'
+    command_chain_symbol: '&&'
     keyword_prefix: $
+    history_size: 1000
+    date:
+        multi_start_symbol: (
+        multi_end_symbol: )
+        normalize: false
+    time:
+        add_prefix: +
+        subtract_prefix: '-'
 output:
     frame:
         padding: 1

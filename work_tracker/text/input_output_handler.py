@@ -49,7 +49,7 @@ class InputOutputHandler:
             lines: list[str] = file.readlines()
 
         with open(history_path, "w", newline="\n") as file:
-            file.writelines(lines[-Config.data.input.input_history_size*3:]) # 3 = size of one command
+            file.writelines(lines[-Config.data.input.history_size*3:]) # 3 = size of one command
 
     def input(self, prefix: str, show_autocomplete: bool = True, custom_autocomplete: list[str] = None) -> str:
         if custom_autocomplete is not None:

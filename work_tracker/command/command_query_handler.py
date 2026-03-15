@@ -58,9 +58,9 @@ class CommandQueryHandler:
 
         if result.undoable and not self._during_execute_after:
             multi_dates_text: str = \
-                (Config.data.input.multi_date_start_symbol
-                 + query.raw_full_input.split(Config.data.input.multi_date_start_symbol)[1].split(Config.data.input.multi_date_end_symbol)[0]
-                 + Config.data.input.multi_date_end_symbol + " ") \
+                (Config.data.input.date.multi_start_symbol
+                 + query.raw_full_input.split(Config.data.input.date.multi_start_symbol)[1].split(Config.data.input.date.multi_end_symbol)[0]
+                 + Config.data.input.date.multi_end_symbol + " ") \
                 if query.multi_dates_count != 0 and query.order_index != 0 \
                 else ''
             self._history.add(KeyManager.encode(self.data), f"{multi_dates_text}{query.raw_text}")

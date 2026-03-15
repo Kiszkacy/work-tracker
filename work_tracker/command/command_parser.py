@@ -87,7 +87,7 @@ class CommandParser:
                 )
                 break
 
-            final_dates: list[Date] = Date.normalize_dates(multi_dates + dates, preserve_order=True) # TODO allow user to turn off normalization
+            final_dates: list[Date] = Date.normalize_dates(multi_dates + dates, preserve_order=True) if Config.data.input.date.normalize else (multi_dates + dates)
             queries.append(CommandQuery(
                 command=command,
                 dates=final_dates,
@@ -172,7 +172,7 @@ class CommandParser:
 
     @classmethod
     def _has_multi_command_dates(cls, parser: CommandTextParser) -> bool:
-        return parser.peak().startswith(Config.data.input.multi_date_start_symbol)
+        return parser.peak().startswith(Config.data.input.date.multi_start_symbol)
 
     @classmethod
     def _get_multi_command_dates(cls, parser: CommandTextParser) -> list[Date]:
@@ -184,23 +184,23 @@ class CommandParser:
         force_break: bool = False
         first_word: bool = True
         seen_multi_date_end_symbol: bool = False
-        while word := parser.peak(): # TODO split the 'Config.data.input.multi_date_end_symbol' logic into _get_multi_command_dates ?
+        while word := parser.peak(): # TODO split the 'Config.data.input.date.multi_end_symbol' logic into _get_multi_command_dates ?
             if require_multi_command_date_symbols and first_word:
                 first_word = False
-                if word == Config.data.input.multi_date_start_symbol:
+                if word == Config.data.input.date.multi_start_symbol:
                     parser.next()
                     continue
-                elif word.startswith(Config.data.input.multi_date_start_symbol):
-                    word = word[len(Config.data.input.multi_date_start_symbol):]
+                elif word.startswith(Config.data.input.date.multi_start_symbol):
+                    word = word[len(Config.data.input.date.multi_start_symbol):]
                 else:
                     break
-            elif require_multi_command_date_symbols and word == Config.data.input.multi_date_end_symbol:
+            elif require_multi_command_date_symbols and word == Config.data.input.date.multi_end_symbol:
                 seen_multi_date_end_symbol = True
                 parser.next()
                 break
-            elif require_multi_command_date_symbols and word.endswith(Config.data.input.multi_date_end_symbol):
+            elif require_multi_command_date_symbols and word.endswith(Config.data.input.date.multi_end_symbol):
                 seen_multi_date_end_symbol = True
-                word = word[:-len(Config.data.input.multi_date_end_symbol)]
+                word = word[:-len(Config.data.input.date.multi_end_symbol)]
                 force_break = True
             
             date: Date | None = cls._extract_date(word)
@@ -216,7 +216,7 @@ class CommandParser:
         if require_multi_command_date_symbols and not seen_multi_date_end_symbol:
             return []
         else:
-            return Date.normalize_dates(parsed_dates, preserve_order=True) # TODO normalize too aggressive in some cases, allow user to turn it off ?
+            return Date.normalize_dates(parsed_dates, preserve_order=True) if Config.data.input.date.normalize else parsed_dates
 
     @classmethod
     def _extract_date(cls, text: str) -> Date | None:
@@ -292,15 +292,15 @@ class CommandParser:
         parser.checkpoint()
         argument_type: TimeArgumentType = TimeArgumentType.Overwrite
         text: str = parser.peak()
-        if text == Config.data.input.time_add_prefix:
+        if text == Config.data.input.time.add_prefix:
             argument_type = TimeArgumentType.Add
             parser.next()
-        elif text.startswith(Config.data.input.time_add_prefix):
+        elif text.startswith(Config.data.input.time.add_prefix):
             argument_type = TimeArgumentType.Add
-        elif text == Config.data.input.time_subtract_prefix:
+        elif text == Config.data.input.time.subtract_prefix:
             argument_type = TimeArgumentType.Subtract
             parser.next()
-        elif text.startswith(Config.data.input.time_subtract_prefix):
+        elif text.startswith(Config.data.input.time.subtract_prefix):
             argument_type = TimeArgumentType.Subtract
 
         minutes: int = cls._get_minute_count(parser)
@@ -369,10 +369,10 @@ class CommandParser:
         if text is None:
             parser.go_to_checkpoint()
             return None
-        elif text.startswith(Config.data.input.time_add_prefix):
-            text = text[len(Config.data.input.time_add_prefix):]
-        elif text.startswith(Config.data.input.time_subtract_prefix):
-            text = text[len(Config.data.input.time_subtract_prefix):]
+        elif text.startswith(Config.data.input.time.add_prefix):
+            text = text[len(Config.data.input.time.add_prefix):]
+        elif text.startswith(Config.data.input.time.subtract_prefix):
+            text = text[len(Config.data.input.time.subtract_prefix):]
 
         minutes: int = cls._extract_minute_count(text)
         if minutes is not None:
