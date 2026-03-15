@@ -7,9 +7,9 @@ from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInv
 
 class RollbackHandler(CommandHandler):
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
-        if date_count == 0 and argument_count == 1:
+        if date_count == 0 and argument_count == 1 and isinstance(arguments[0], str):
             checkpoint_identifier: str = arguments[0]
-            data: AppData = CheckpointManager.load(checkpoint_identifier, manual_checkpoint=True)
+            data: AppData = CheckpointManager.load(f"user.{checkpoint_identifier}") # TODO hardcoded 'user.'
             if data is None:
                 self.io.output(f"Could not find a checkpoint named {checkpoint_identifier}.")
                 return CommandHandlerResult(undoable=False)

@@ -42,16 +42,17 @@ class _CompatibilityUnpickler(pickle.Unpickler):
         return super().find_class(module, name)
 # === v1 end
 
+
 class CheckpointManager:
     @classmethod
-    def load(cls, identifier: str, manual_checkpoint: bool = False) -> AppData | None: # TODO os exceptions
-        if manual_checkpoint:
-            for checkpoint_path in cls.all_manual_checkpoints():
+    def load(cls, identifier: str, persistent_checkpoint: bool = True) -> AppData | None: # TODO os exceptions
+        if not persistent_checkpoint:
+            for checkpoint_path in cls.all_temporary_checkpoints():
                 name, date = checkpoint_path.name.removesuffix('.save.checkpoint').split("__") # TODO hardcoded '.save.checkpoint'
                 if name == identifier:
                     identifier = f"{name}__{date}"
 
-        path: Path = (get_data_path() if not manual_checkpoint else get_cache_path()).joinpath(f"{identifier}.save.checkpoint")
+        path: Path = (get_data_path() if persistent_checkpoint else get_cache_path()).joinpath(f"{identifier}.save.checkpoint")
         if not path.exists():
             return None
         with lzma.open(path, "rb") as file:
@@ -59,27 +60,27 @@ class CheckpointManager:
         return data
 
     @staticmethod
-    def save(identifier: str, data: AppData, manual_checkpoint: bool = False): # TODO os exceptions
-        full_identifier: str = identifier if not manual_checkpoint else f"{identifier}__{datetime.datetime.now().strftime('%H-%M-%S')}"
-        path: Path = (get_data_path() if not manual_checkpoint else get_cache_path()).joinpath(f"{full_identifier}.save.checkpoint")
+    def save(identifier: str, data: AppData, persistent_checkpoint: bool = True, add_suffix_timestamp: bool = False, created_by_user: bool = False): # TODO os exceptions
+        full_identifier: str = identifier if not add_suffix_timestamp else f"{identifier}__{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+        path: Path = (get_data_path() if persistent_checkpoint else get_cache_path()).joinpath(f"{'user.' if created_by_user else ''}{full_identifier}.save.checkpoint") # TODO hardcoded 'user.'
         with lzma.open(path, "wb") as file:
             pickle.dump(data, file)
 
     @classmethod
     def load_latest(cls) -> AppData | None: # TODO os exceptions
-        files: list[Path] = cls.all_automatic_checkpoints()
+        files: list[Path] = cls.all_persistent_checkpoints()
         if not files:
             return None
 
-        newest_file: str = max(files, key=os.path.getctime) # TODO this sorting might be unclear for user
-        return cls.load(os.path.basename(newest_file.rstrip(".save.checkpoint")))
+        newest_file: Path = max(files, key=os.path.getctime) # TODO this sorting might be unclear for user
+        return cls.load(os.path.basename(newest_file.name.split('.')[0]))
 
     @staticmethod
-    def all_automatic_checkpoints() -> list[Path]: # TODO os exceptions
+    def all_persistent_checkpoints() -> list[Path]: # TODO os exceptions
         return [get_data_path().joinpath(file) for file in os.listdir(get_data_path()) if file.endswith(".save.checkpoint") and os.path.isfile(get_data_path().joinpath(file))]
 
     @staticmethod
-    def all_manual_checkpoints() -> list[Path]: # TODO os exceptions
+    def all_temporary_checkpoints() -> list[Path]: # TODO os exceptions
         return [get_cache_path().joinpath(file) for file in os.listdir(get_cache_path()) if file.endswith(".save.checkpoint") and os.path.isfile(get_cache_path().joinpath(file))]
 
     @staticmethod

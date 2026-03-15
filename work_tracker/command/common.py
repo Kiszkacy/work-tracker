@@ -145,7 +145,7 @@ _global_command_templates: list[CommandTemplate] = [
             short_help_description="Displays the calendar for the month",
             full_help_description=(
                 " Displays the calendar for the month corresponding to the given date."
-                " Dates are marked using a color-coded legend which can be easily configured via 'config' command,"
+                f" Dates are marked using a color-coded legend which can be easily configured via {Color.Brightblue.value}config{Color.Reset.value} command,"
                 " this provides a clear distinction between different types of days."
             ).strip(),
             use_case_description=[
@@ -159,27 +159,30 @@ _global_command_templates: list[CommandTemplate] = [
     CommandTemplate(
         name="checkpoint",
         help=CommandHelp(
-            full_use_case_template="checkpoint [name]",
+            full_use_case_template="checkpoint [name] ['permanent']",
             short_help_description="Creates or lists available checkpoints",
             full_help_description=(
                 " Allows you to create a checkpoint which represents a saved state of the app."
-                " If no argument is provided, it lists all available checkpoints in current session."
-                " If a checkpoint name is provided, it creates or overwrites a checkpoint with that name."
-                " Checkpoints are session-specific and are deleted when the app is closed, meaning they only exist until you exit the app."
+                " If no argument is provided, it lists all available checkpoints."
+                " If a checkpoint name is provided, it creates a checkpoint with that name."
+                " Checkpoints by default are session-specific and are deleted when the app is closed, meaning they only exist until you exit the app."
+                f" If the optional {Color.Brightblue.value}permanent{Color.Reset.value} argument is included when creating a checkpoint,"
+                f" it becomes a permanent checkpoint that persists across sessions and is not deleted when the app is closed."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "checkpoint", "lists all available checkpoints"),
-                CommandUseCaseDescription(set(Mode), "checkpoint <name>", "creates or overwrites a checkpoint with the given name"),
+                CommandUseCaseDescription(set(Mode), "checkpoint <name>", "creates a checkpoint with the given name"),
+                CommandUseCaseDescription(set(Mode), "checkpoint <name> 'permanent'", "creates a permanent checkpoint with the given name"),
             ],
         ),
         supported_modes=set(Mode),
         abbreviations=[],
-        valid_argument_types=[[], [str]],
+        valid_argument_types=[[], [str], [str, str]],
     ),
     CommandTemplate(
         name="clear",
         help=CommandHelp(
-            full_use_case_template="clear [month]",
+            full_use_case_template="clear",
             short_help_description="Resets a date to its initial state",
             full_help_description=(
                 " Resets the given date to its initial state, as it was when first initialized."
@@ -237,8 +240,8 @@ _global_command_templates: list[CommandTemplate] = [
             full_help_description=(
                 " Calculates the number of days required to reach the total work time while matching the daily work time as closely as possible to the provided amount."
                 " If no additional parameters are given, it calculates the required number of days based on the total work time specified."
-                " If 'remote' or 'office' is specified as the first argument, the calculation is limited to that specific type of work."
-                " If the 'clean' argument is included, the calculation ignores any previously logged work time and assumes a clean month."
+                f" If {Color.Brightblue.value}remote{Color.Reset.value} or {Color.Brightblue.value}office{Color.Reset.value} is specified as the first argument, the calculation is limited to that specific type of work."
+                f" If the {Color.Brightblue.value}clean{Color.Reset.value} argument is included, the calculation ignores any previously logged work time and assumes a clean month."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "days <minutes>", "calculates the number of days required to reach the monthly target work time while keeping daily work time as close as possible to the given amount"),
@@ -289,7 +292,7 @@ _global_command_templates: list[CommandTemplate] = [
             full_use_case_template="done",
             short_help_description="Sets the time spent at work to match the target time",
             full_help_description=(
-                " Sets the time spent at work to the value of the target time, which can be displayed using the 'target' command."
+                f" Sets the time spent at work to the value of the target time, which can be displayed using the {Color.Brightblue.value}target{Color.Reset.value} command."
                 " This command is useful for quickly aligning your time worked with the preset target, without needing to manually adjust the time."
             ).strip(),
             use_case_description=[
@@ -308,7 +311,7 @@ _global_command_templates: list[CommandTemplate] = [
             full_help_description=(
                 " Marks the end of work to track time spent at work. If no time is provided, it uses the current system time."
                 " If a time is provided, it sets that as the end time."
-                " This command works together with the 'start' command to calculate the total time worked by subtracting the start time from the end time."
+                f" This command works together with the {Color.Brightblue.value}start{Color.Reset.value} command to calculate the total time worked by subtracting the start time from the end time."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription({Mode.Today, Mode.Day}, "end", "marks the end of work at the current system time."),
@@ -326,7 +329,7 @@ _global_command_templates: list[CommandTemplate] = [
             short_help_description="Exits the current mode or application",
             full_help_description=(
                 " Exits the app and saves the data if you are currently working in the today mode. "
-                " If you're working within the context of any other date, it will switch you back to the today mode."
+                " If you are working within the context of any other date, it will switch you back to the today mode."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "exit", ""),
@@ -361,7 +364,7 @@ _global_command_templates: list[CommandTemplate] = [
             short_help_description="Displays a list of all commands with short descriptions or detailed help for a specific command.",
             full_help_description=(
                 " Displays a list of all available commands along with short descriptions. "
-                " Alternatively, 'help <command-name>' can be used to get detailed information about a specific command."
+                f" Alternatively, {Color.Brightblue.value}help <command-name>{Color.Reset.value} can be used to get detailed information about a specific command."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "help", "displays a list of all commands with short descriptions."),
@@ -473,7 +476,8 @@ _global_command_templates: list[CommandTemplate] = [
                 f" These arguments can be referenced throughout the sequence by using the format {Color.Brightblue.value}<argument_name>{Color.Reset.value}."
                 f"\n\nTo avoid any problems during the macro definition, it is recommended to enclose the entire command sequence of the macro in quotes (single or double)."
                 f" This makes the text inside the quotes treated as a literal string, preventing any issues with special characters or spaces in the command sequence."
-                f" For example, defining a macro called {Color.Brightblue.value}custom-help{Color.Reset.value} that runs {Color.Brightblue.value}help{Color.Reset.value} on a user-specified command name (or 'macro' if no name is provided) would look like this:"
+                f" For example, defining a macro called {Color.Brightblue.value}custom-help{Color.Reset.value} that runs {Color.Brightblue.value}help{Color.Reset.value} on a user-specified command name "
+                f" (or {Color.Brightblue.value}macro{Color.Reset.value} if no name is provided) would look like this:"
                 f'\n  {Color.Blue.value}>> {Color.Brightblue.value}macro custom-help <command_name=macro> "help <command_name>"{Color.Reset.value}'
             ).strip(),
             use_case_description=[
@@ -494,8 +498,8 @@ _global_command_templates: list[CommandTemplate] = [
             full_help_description=(
                 " Calculates the required daily work time to reach the total monthly work time, based on the target number of days provided."
                 " If no additional parameters are given, it calculates the required minutes per day based on the total monthly work time required."
-                " If 'remote' or 'office' is specified as the first argument, the calculation is restricted to that specific type of work."
-                " If the 'clean' argument is included, the calculation ignores any previously logged work time and assumes a clean month."
+                f" If {Color.Brightblue.value}remote{Color.Reset.value} or {Color.Brightblue.value}office{Color.Reset.value} is specified as the first argument, the calculation is restricted to that specific type of work."
+                f" If the {Color.Brightblue.value}clean{Color.Reset.value} argument is included, the calculation ignores any previously logged work time and assumes a clean month."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "minutes <days>", "calculates the daily minutes required to reach the monthly target work time within the given number of days"),
@@ -549,7 +553,7 @@ _global_command_templates: list[CommandTemplate] = [
             full_help_description=(
                 " Re-applies the last command that was undone and altered the state of the data."
                 " If a count is provided, it re-applies that many commands at once."
-                " The history of commands that can be undone or redone is tracked and can be viewed using the {Color.Brightblue.value}history{Color.Reset.value} command."
+                f" The history of commands that can be undone or redone is tracked and can be viewed using the {Color.Brightblue.value}history{Color.Reset.value} command."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "redo", "re-applies the last undone command"),
@@ -583,8 +587,8 @@ _global_command_templates: list[CommandTemplate] = [
             short_help_description="Rolls back the app state to a specified checkpoint",
             full_help_description=(
                 " Rolls back the app state to a specified checkpoint. A checkpoint is a saved state created by the user using the"
-                " 'checkpoint' command. WorkTracker will revert to that state undoing or applying any changes made since"
-                " the checkpoint was created, regardless of any actions taken in the meantime."
+                f" {Color.Brightblue.value}checkpoint{Color.Reset.value} command."
+                f" WorkTracker will revert to that state undoing or applying any changes made since the checkpoint was created, regardless of any actions taken in the meantime."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "rollback <checkpoint>", ""),
@@ -592,7 +596,7 @@ _global_command_templates: list[CommandTemplate] = [
         ),
         supported_modes=set(Mode),
         abbreviations=[],
-        valid_argument_types=[[str]],
+        valid_argument_types=[[str], [int]],
     ),
     CommandTemplate(
         name="rwr",
@@ -620,7 +624,7 @@ _global_command_templates: list[CommandTemplate] = [
             full_help_description=(
                 " Marks the start of work to track time spent at work. If no time is provided, it uses the current system time."
                 " If a time is provided, it sets that as the start time."
-                " This command works together with the 'end' command to precisely and with ease track the total time worked."
+                f" This command works together with the {Color.Brightblue.value}end{Color.Reset.value} command to precisely and with ease track the total time worked."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription({Mode.Today, Mode.Day}, "start", "marks the start of work at the current system time."),
@@ -655,8 +659,8 @@ _global_command_templates: list[CommandTemplate] = [
             full_help_description=(
                 " When run without arguments, this command prints the target time spent at work for the given date."
                 " If a time is provided, it modifies the target time by the specified amount."
-                " The arguments 'office' and 'remote' display the target time for office and remote work for the entire month, respectively."
-                " The argument 'current' sets the target time to match the amount of time already worked on the current day."
+                f" The arguments {Color.Brightblue.value}office{Color.Reset.value} and {Color.Brightblue.value}remote{Color.Reset.value} display the target time for office and remote work for the entire month, respectively."
+                f" The argument {Color.Brightblue.value}current{Color.Reset.value} sets the target time to match the amount of time already worked on the current day."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "target", "displays the target time at work for the given date."),
@@ -676,7 +680,7 @@ _global_command_templates: list[CommandTemplate] = [
             short_help_description="Presents a brief guide on how to use WorkTracker",
             full_help_description=(
                 " Starts tutorial mode to walk you through a brief guide on how to use WorkTracker."
-                " Switch between pages by specifying a page number, to exit tutorial mode, type 'quit'."
+                f" Switch between pages by specifying a page number, to exit tutorial mode, type {Color.Brightblue.value}quit{Color.Reset.value}."
                 " If command is run with a page number provided, it will display the content of that specific page without entering the tutorial mode."
             ).strip(),
             use_case_description=[

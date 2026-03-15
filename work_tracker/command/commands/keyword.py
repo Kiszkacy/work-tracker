@@ -53,7 +53,8 @@ class KeywordHandler(CommandHandler):
         
         prefix: str = Config.data.input.keyword_prefix
         footer_text: str = wrap_text(
-            text=f"To use keywords type its name with a prefix: {Color.Brightblue.value}{prefix}{Color.Reset.value}, for example: {Color.Brightblue.value}{prefix}today{Color.Reset.value}. Prefix can be changed via the config command.",
+            text=f"To use keywords type its name with a prefix: {Color.Brightblue.value}{prefix}{Color.Reset.value}, for example: {Color.Brightblue.value}{prefix}today{Color.Reset.value}. "
+                 f"Prefix can be changed via the {Color.Brightblue.value}config{Color.Reset.value} command.",
             frame_wrap=True
         )
         

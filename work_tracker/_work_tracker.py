@@ -132,7 +132,7 @@ class WorkTracker:
                 self.io.output("Invalid country code. Please input valid contry code.", color=Color.from_key(Config.data.output.error_color))
 
         self.data = AppData(country_code=country_code)
-        CheckpointManager.save("initial", self.data)
+        CheckpointManager.save("initial", self.data, add_suffix_timestamp=True)
 
         self.io.write(f"Everything is set up and ready.", color=Color.Cyan, end=" ")
         self.io.write(f"To view a list of available commands type {Color.Brightblue.value}help{Color.Reset.value}.", end=" ")
@@ -198,7 +198,7 @@ class WorkTracker:
         CheckpointManager.clear_cache()
 
     def _at_crash_exit(self, crash_message: str | None = None, exception: Exception | None = None):
-        CheckpointManager.save(f"crash-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}", self.data)
+        CheckpointManager.save("crash", self.data, add_suffix_timestamp=True)
         with open(get_data_path().joinpath(f"crash-log-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"), "w") as file:
             if crash_message is not None:
                 file.write(crash_message)
@@ -207,7 +207,7 @@ class WorkTracker:
         sys.exit()
 
     def _at_exit(self):
-        CheckpointManager.save(f"{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}", self.data)
+        CheckpointManager.save("exit", self.data, add_suffix_timestamp=True)
         sys.exit()
 
     def handle_exit_signal(self): # TODO check if this works | no it doesnt :(
