@@ -24,7 +24,7 @@ class __MacroHandler(CommandHandler):
                 )
             )
 
-        given_arguments: list[any] = arguments[1:]
+        given_arguments: list[Any] = arguments[1:]
         given_argument_count: int = len(given_arguments)
 
         max_accepted_argument_count: int = len(macro.default_argument_values)

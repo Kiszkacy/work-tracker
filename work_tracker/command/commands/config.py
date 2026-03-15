@@ -1,3 +1,5 @@
+from typing import Any
+
 import yaml
 from pydantic import BaseModel
 
@@ -20,7 +22,7 @@ class ConfigHandler(CommandHandler):
             self.io.output("\n".join(text_with_lines))
             return CommandHandlerResult(undoable=False)
         elif date_count == 0 and argument_count == 1:
-            value: any = self._get_printable_nested_config_value(arguments[0])
+            value: Any = self._get_printable_nested_config_value(arguments[0])
             if value is None:
                 self.io.output(f"The field {Color.Brightblue.value}{arguments[0]}{Color.Reset.value} could not be found in the config.")
             else:
@@ -37,16 +39,16 @@ class ConfigHandler(CommandHandler):
         else: # argument_count > 2
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
 
-    def _get_config_value_via_dot_keys(self, value_path: str, use_clean_copy: bool) -> any:
+    def _get_config_value_via_dot_keys(self, value_path: str, use_clean_copy: bool) -> Any:
         keys: list[str] = value_path.split(".")
-        dictionary: dict[str, any] | any = Config.data.model_dump() if use_clean_copy else Config.data
+        dictionary: dict[str, Any] | Any = Config.data.model_dump() if use_clean_copy else Config.data
         for key in keys:
             if not isinstance(dictionary, BaseModel):
                 return None
             dictionary = getattr(dictionary, key)
         return dictionary
 
-    def _set_config_value_via_dot_keys(self, value_path: str, value: any) -> bool:
+    def _set_config_value_via_dot_keys(self, value_path: str, value: Any) -> bool:
         keys: list[str] = value_path.split(".")
         keys_before_last, last_key = keys[:-1], keys[-1]
         if last_key == "version":
@@ -76,8 +78,8 @@ class ConfigHandler(CommandHandler):
         Config.save()
         return True
 
-    def _get_printable_nested_config_value(self, value_path: str) -> any:
-        value: any = self._get_config_value_via_dot_keys(value_path, True)
+    def _get_printable_nested_config_value(self, value_path: str) -> Any:
+        value: Any = self._get_config_value_via_dot_keys(value_path, True)
         if value is None:
             return None
 

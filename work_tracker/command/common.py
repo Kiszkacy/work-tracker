@@ -4,6 +4,7 @@ import pickle
 from dataclasses import dataclass
 from enum import Enum, auto
 from types import UnionType
+from typing import Any
 
 from work_tracker.common import AppData, Date, Mode
 from work_tracker.text.common import Color
@@ -79,7 +80,7 @@ class ParseResult:
     queries: list[CommandQuery]
     # error: ParserError | None = None
     # TODO had to remove ParserError typehint due to circular imports, fix it in the future
-    error: any = None
+    error: Any = None
 
 
 class KeyManager: # TODO shorten codes

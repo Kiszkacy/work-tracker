@@ -6,7 +6,7 @@ import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Type, Callable
+from typing import Type, Callable, Any
 
 import appdirs
 from multimethod import multimethod
@@ -35,24 +35,24 @@ def get_data_path() -> Path:
     return Path(data_path).absolute()
 
 
-def find_first_not_fulfilling(items: list[any], predicate: Callable[[list[any]], bool]) -> any | None:
+def find_first_not_fulfilling(items: list[Any], predicate: Callable[[list[Any]], bool]) -> any | None:
     return next((item for item in items if not predicate(item)), None)
 
 
 class KeyDefaultDict(defaultdict):
-    def __init__(self, function: Callable[[any], any]):
+    def __init__(self, function: Callable[[Any], Any]):
         super().__init__(None)
-        self.function: Callable[[any], any] = function
+        self.function: Callable[[Any], Any] = function
 
-    def __missing__(self, key) -> any:
-        value: any = self.function(key)
+    def __missing__(self, key) -> Any:
+        value: Any = self.function(key)
         self[key] = value
         return value
 
     def __reduce__(self):
         return self.__class__, (self.function,), dict(self)
 
-    def __setstate__(self, state: any):
+    def __setstate__(self, state: Any):
         self.update(state)
 
 

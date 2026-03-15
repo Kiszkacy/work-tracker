@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from path import Path
 import yaml
 from pydantic import BaseModel
@@ -88,11 +90,11 @@ class MainConfig(BaseModel):
     output: OutputConfig
 
     @staticmethod
-    def _is_latest_config_version(raw_data: dict[str, any]) -> bool:
+    def _is_latest_config_version(raw_data: dict[str, Any]) -> bool:
         return raw_data.get("version") == __config_version__
 
     @staticmethod
-    def _update_config_data_to_v2(raw_data: dict[str, any]):
+    def _update_config_data_to_v2(raw_data: dict[str, Any]):
         raw_data["input"]["input_history_size"] = raw_data["input"].get("input_history_size", 1000)
         raw_data["input"]["multi_date_start_symbol"] = raw_data.pop("multi_date_start_symbol", "(")
         raw_data["input"]["multi_date_end_symbol"] = raw_data.pop("multi_date_end_symbol", ")")
@@ -117,7 +119,7 @@ class MainConfig(BaseModel):
         raw_data["version"] = 2
 
     @classmethod
-    def _update_config_data_to_latest_version(cls, raw_data: dict[str, any]):
+    def _update_config_data_to_latest_version(cls, raw_data: dict[str, Any]):
         # just like data, update to target version step by step: A -> A+1 -> A+2 -> ... -> B
         current_version: int = raw_data.get("version", 1)
 
@@ -146,7 +148,7 @@ class Config:
     @classmethod
     def _load(cls):
         with open(cls.config_path, "r") as file:
-            raw_data: dict[str, any] = yaml.safe_load("".join(file))
+            raw_data: dict[str, Any] = yaml.safe_load("".join(file))
 
         was_updated: bool = False
         if not MainConfig._is_latest_config_version(raw_data):
