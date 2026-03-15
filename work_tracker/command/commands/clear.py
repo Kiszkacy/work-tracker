@@ -43,7 +43,7 @@ class ClearHandler(CommandHandler):
         date = date.fill_with_today().to_month_date()
         for day in date.days_in_a_month():
             self._handle_day(day)
-        self.data.month[date].fte = Config.command.fte.default_value
-        self.data.month[date].remote_work_ratio = Config.command.rwr.default_value
+        self.data.month[date].fte = Config.data.command.fte.default_value
+        self.data.month[date].remote_work_ratio = Config.data.command.rwr.default_value
         new_target_minutes_total: int = sum([480 * self.data.month[date].fte if self.data.day[day].day_type == DayType.WORKDAY else 0 for day in date.days_in_a_month()])
         self.data.month[date].target_minutes = new_target_minutes_total
