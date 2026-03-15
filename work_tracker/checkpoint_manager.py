@@ -2,11 +2,45 @@ import datetime
 import lzma
 import os
 import pickle
+from dataclasses import dataclass, field
+from enum import Enum, auto
 
 from path import Path
 
 from .common import AppData, get_data_path, get_cache_path
 
+
+# deprecated classes for unpickling old data - only used during initial load after update
+# === v1 start
+class _WorkStrategy(Enum):
+    Default = auto()
+    Quick = auto()
+
+
+@dataclass
+class _WorkSetup:
+    default_fte: float = 1.0
+    preferred_weekdays: list[int] = field(default_factory=list)
+    non_availability_weekdays: list[int] = field(default_factory=list)
+    default_remote_work_ratio: float = 0.4
+    preferred_remote_weekdays: list[int] = field(default_factory=list)
+    preferred_office_day_length_in_minutes: int | None = 480
+    preferred_remote_day_length_in_minutes: int | None = 480
+    office_day_max_length_in_minutes: int | None = 600
+    remote_day_max_length_in_minutes: int | None = 600
+    each_weekday_max_length_in_minutes: list[int | None] = field(default_factory=lambda: [None, None, None, None, None])
+    strategy: _WorkStrategy = _WorkStrategy.Default
+
+
+class _CompatibilityUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if module == 'work_tracker.common':
+            if name == 'WorkSetup':
+                return _WorkSetup
+            elif name == 'WorkStrategy':
+                return _WorkStrategy
+        return super().find_class(module, name)
+# === v1 end
 
 class CheckpointManager:
     @classmethod
@@ -21,7 +55,7 @@ class CheckpointManager:
         if not path.exists():
             return None
         with lzma.open(path, "rb") as file:
-            data: AppData = pickle.load(file)
+            data: AppData = _CompatibilityUnpickler(file).load()
         return data
 
     @staticmethod

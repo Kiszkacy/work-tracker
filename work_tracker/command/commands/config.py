@@ -55,21 +55,21 @@ class ConfigHandler(CommandHandler):
 
         dictionary: BaseModel | None = self._get_config_value_via_dot_keys(".".join(keys_before_last), False)
         if dictionary is None:
-            self.io.output(f"Could not find the specified field {Color.Brightred.value}{value_path}{Color.Reset.value}. Ensure that the path is correct.")
+            self.io.output(f"Could not find the specified field {Color.from_key(Config.data.output.error_color).value}{value_path}{Color.Reset.value}. Ensure that the path is correct.")
             return False
         elif not isinstance(dictionary, BaseModel):
-            self.io.output(f"The field {Color.Brightred.value}{value_path}{Color.Reset.value} could not be found in the config.")
+            self.io.output(f"The field {Color.from_key(Config.data.output.error_color).value}{value_path}{Color.Reset.value} could not be found in the config.")
             return False
         elif getattr(dictionary, last_key) is None:
-            self.io.output(f"The field {Color.Brightred.value}{value_path}{Color.Reset.value} could not be found in the config.")
+            self.io.output(f"The field {Color.from_key(Config.data.output.error_color).value}{value_path}{Color.Reset.value} could not be found in the config.")
             return False
         elif isinstance(getattr(dictionary, last_key), BaseModel):
-            self.io.output(f"The field {Color.Brightred.value}{value_path}{Color.Reset.value} is not a changeable config field.")
+            self.io.output(f"The field {Color.from_key(Config.data.output.error_color).value}{value_path}{Color.Reset.value} is not a changeable config field.")
             return False
 
         expected_type: type = type(getattr(dictionary, last_key)) # TODO this wont work if field can be assigned multiple types
         if not isinstance(value, expected_type):
-            self.io.output(f"Invalid type of value to change field {Color.Brightred.value}{last_key}{Color.Reset.value}.")
+            self.io.output(f"Invalid type of value to change field {Color.from_key(Config.data.output.error_color).value}{last_key}{Color.Reset.value}.")
             return False
 
         setattr(dictionary, last_key, value)

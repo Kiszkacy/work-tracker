@@ -126,7 +126,7 @@ class WorkTracker:
             if country_code in valid_codes: # TODO use of private method
                 break
             else:
-                self.io.output("Invalid country code. Please input valid contry code.", color=Color.Brightred)
+                self.io.output("Invalid country code. Please input valid contry code.", color=Color.from_key(Config.data.output.error_color))
 
         self.data = AppData(country_code=country_code)
         CheckpointManager.save("initial", self.data)
@@ -227,16 +227,16 @@ class WorkTracker:
 
                 result: ParseResult = CommandParser.parse(user_input, self.state)
                 if result.error:
-                    self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.Brightred)
+                    self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.from_key(Config.data.output.error_color))
                     continue
 
                 for query in result.queries:
                     self.command_handler.run(query)
         except KeyboardInterrupt:
-            self.io.output("UNSAFE EXIT: saving data...", color=Color.Brightred, end="")
+            self.io.output("UNSAFE EXIT: saving data...", color=Color.from_key(Config.data.output.error_color), end="")
             self._at_exit()
         except Exception as exception:
-            self.io.output("FATAL ERROR: saving data and creating error log...", color=Color.Brightred, end="")
+            self.io.output("FATAL ERROR: saving data and creating error log...", color=Color.from_key(Config.data.output.error_color), end="")
             self._at_crash_exit(crash_message=f"{error_log_last_processed_input}\n\n", exception=exception)
 
     def start(self):

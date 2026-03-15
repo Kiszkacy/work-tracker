@@ -98,6 +98,22 @@ class KeyManager: # TODO shorten codes
 
 _global_command_templates: list[CommandTemplate] = [
     CommandTemplate(
+        name="absence",
+        help=CommandHelp(
+            full_use_case_template="absence",
+            short_help_description="Marks a date as an absence",
+            full_help_description=(
+                " Marks a date as an absence. When used within the context of a specific month it will mark all work days as absences within that month."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "absence", ""),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=["absent"],
+        valid_argument_types=[[]],
+    ),
+    CommandTemplate(
         name="alias",
         help=CommandHelp(
             full_use_case_template="(alias [name]) | (alias <name> <replacement_text...>)",
@@ -200,9 +216,9 @@ _global_command_templates: list[CommandTemplate] = [
         name="dayoff",
         help=CommandHelp(
             full_use_case_template="dayoff",
-            short_help_description="Marks a date as a day off.",
+            short_help_description="Marks a date as a day off",
             full_help_description=(
-                " Marks a date as a day off. When used within the context of a specific month it will mark all dates containing work as days off within that month."
+                " Marks a date as a day off. When used within the context of a specific month it will mark all work days as days off within that month."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "dayoff", ""),
@@ -396,8 +412,9 @@ _global_command_templates: list[CommandTemplate] = [
             full_use_case_template="info",
             short_help_description="Displays detailed information for a specific date",
             full_help_description=(
-                " Displays all relevant information for a given date, including the time worked, target time, and various attributes such as"
-                " whether the day is marked as a holiday, workday, remote or office work, or a day off."
+                " Displays all relevant information for a given date."
+                " For a specific day, this includes the time worked, target time, and attributes such as whether the day is marked as a holiday or workday."
+                " For a month, this includes monthly target time, remote work ratio, and other month-level details."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "info", ""),
@@ -496,27 +513,10 @@ _global_command_templates: list[CommandTemplate] = [
             full_use_case_template="office",
             short_help_description="Marks a date as office work",
             full_help_description=(
-                " Marks a date as office work. As a result, this date is no longer treated as a remote work, even if it was marked as one before."
+                " Marks a date as office work. When used within the context of a specific month it will mark all work days as office work within that month."
             ).strip(),
             use_case_description=[
-                CommandUseCaseDescription({Mode.Today, Mode.Day}, "office", ""),
-            ],
-        ),
-        supported_modes={Mode.Today, Mode.Day},
-        abbreviations=[],
-        valid_argument_types=[[]],
-    ),
-    CommandTemplate(
-        name="redo",
-        help=CommandHelp(
-            full_use_case_template="redo",
-            short_help_description="Re-applies the last undone command that altered the state of the data",
-            full_help_description=(
-                " Re-applies the last command that was undone and altered the state of the data."
-                " The history of commands that can be undone or redone is tracked and can be viewed using the 'history' command."
-            ).strip(),
-            use_case_description=[
-                CommandUseCaseDescription(set(Mode), "redo", ""),
+                CommandUseCaseDescription(set(Mode), "office", ""),
             ],
         ),
         supported_modes=set(Mode),
@@ -524,18 +524,54 @@ _global_command_templates: list[CommandTemplate] = [
         valid_argument_types=[[]],
     ),
     CommandTemplate(
+        name="present",
+        help=CommandHelp(
+            full_use_case_template="present",
+            short_help_description="Marks a date as being present at work",
+            full_help_description=(
+                " Marks a date as being present, clearing any absence or day off status."
+                " When used within the context of a specific month it will mark all work days as being present within that month."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "present", ""),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=["working"],
+        valid_argument_types=[[]],
+    ),
+    CommandTemplate(
+        name="redo",
+        help=CommandHelp(
+            full_use_case_template="redo [count]",
+            short_help_description="Re-applies the last undone command that altered the state of the data",
+            full_help_description=(
+                " Re-applies the last command that was undone and altered the state of the data."
+                " If a count is provided, it re-applies that many commands at once."
+                " The history of commands that can be undone or redone is tracked and can be viewed using the {Color.Brightblue.value}history{Color.Reset.value} command."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "redo", "re-applies the last undone command"),
+                CommandUseCaseDescription(set(Mode), "redo <count>", "re-applies the last <count> undone commands"),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=[],
+        valid_argument_types=[[], [int]],
+    ),
+    CommandTemplate(
         name="remote",
         help=CommandHelp(
             full_use_case_template="remote",
             short_help_description="Marks a date as remote work",
             full_help_description=(
-                " Marks a date as remote work. As a result, this date is no longer treated as a office work, even if it was marked as one before."
+                " Marks a date as remote work. When used within the context of a specific month it will mark all work days as remote work within that month."
             ).strip(),
             use_case_description=[
-                CommandUseCaseDescription({Mode.Today, Mode.Day}, "remote", ""),
+                CommandUseCaseDescription(set(Mode), "remote", ""),
             ],
         ),
-        supported_modes={Mode.Today, Mode.Day},
+        supported_modes=set(Mode),
         abbreviations=[],
         valid_argument_types=[[]],
     ),
@@ -654,19 +690,21 @@ _global_command_templates: list[CommandTemplate] = [
     CommandTemplate(
         name="undo",
         help=CommandHelp(
-            full_use_case_template="undo",
+            full_use_case_template="undo [count]",
             short_help_description="Undoes the last command executed that altered the state of the data",
             full_help_description=(
                 " Undoes the last command executed that altered the state of the data."
-                " The history of commands that can be undone or redone is tracked and can be viewed using the 'history' command."
+                " If a count is provided, it undoes that many commands at once."
+                f" The history of commands that can be undone or redone is tracked and can be viewed using the {Color.Brightblue.value}history{Color.Reset.value} command."
             ).strip(),
             use_case_description=[
-                CommandUseCaseDescription(set(Mode), "undo", ""),
+                CommandUseCaseDescription(set(Mode), "undo", "undoes the last command"),
+                CommandUseCaseDescription(set(Mode), "undo <count>", "undoes the last <count> commands"),
             ],
         ),
         supported_modes=set(Mode),
         abbreviations=[],
-        valid_argument_types=[[]],
+        valid_argument_types=[[], [int]],
     ),
     CommandTemplate(
         name="workday",

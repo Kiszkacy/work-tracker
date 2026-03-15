@@ -1,21 +1,31 @@
 command:
     calendar:
-        dayoff_background_color: null
-        dayoff_foreground_color: brightmagenta
-        holiday_background_color: null
-        holiday_foreground_color: brightgreen
-        office_background_color: null
-        office_foreground_color: brightred
-        remote_background_color: null
-        remote_foreground_color: brightblue
         title_color: null
         weekend_background_color: null
         weekend_foreground_color: yellow
+        holiday_background_color: null
+        holiday_foreground_color: brightmagenta
+        dayoff_background_color: null
+        dayoff_foreground_color: brightcyan
+        remote_background_color: null
+        remote_foreground_color: brightgreen
+        office_background_color: null
+        office_foreground_color: brightred
+        remote_incomplete_background_color: null
+        remote_incomplete_foreground_color: green
+        office_incomplete_background_color: null
+        office_incomplete_foreground_color: red
+        absence_background_color: null
+        absence_foreground_color: brightblue
+    fte:
+        default_value: 1.0
     help:
         command_list_description_padding: 2
         command_use_case_bullet_point_symbol: '- '
         command_use_case_description_padding: 4
         command_use_case_indent_size: 2
+    rwr:
+        default_value: 0.4
     undo_history_size: 50
 input:
     command_chain_symbol: '&&'
@@ -34,4 +44,5 @@ output:
         title_left_side_padding: 2
         title_padding: 1
     max_width: 80
+    error_color: brightred
 version: 2

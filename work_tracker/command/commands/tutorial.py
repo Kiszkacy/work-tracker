@@ -93,7 +93,7 @@ class TutorialHandler(CommandHandler):
                     elif "previous".startswith(word):
                         current_page_index = max(0, current_page_index-1)
                     else:
-                        self.io.output("Unknown command.", color=Color.Brightred)
+                        self.io.output("Unknown command.", color=Color.from_key(Config.data.output.error_color))
 
             return CommandHandlerResult(undoable=False)
         elif date_count == 0 and argument_count == 1:

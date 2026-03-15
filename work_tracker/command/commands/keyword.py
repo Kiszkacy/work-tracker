@@ -46,7 +46,7 @@ class KeywordHandler(CommandHandler):
 
             color: str = Color.Brightblack.value if index % 2 == 1 else Color.Reset.value
             keyword_texts.append(
-                f"{color}{identifier_padded}{Color.Reset.value}{separator}{modes_text}{separator}{Color.Brightcyan.value}{example_value_padded}{Color.Reset.value}{separator}{color}{wrapped_description}"
+                f"{color}{identifier_padded}{color}{separator}{modes_text}{color}{separator}{Color.Brightcyan.value}{example_value_padded}{color}{separator}{wrapped_description}"
             )
         
         wrapped_text: str = "\n".join(keyword_texts)

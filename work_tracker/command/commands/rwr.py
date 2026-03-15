@@ -3,7 +3,7 @@ from fractions import Fraction
 from work_tracker.command.common import CommandArgument
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.common import Date, ReadonlyAppState, Mode, find_first_not_fulfilling
+from work_tracker.common import Date, DayType, ReadonlyAppState, Mode, find_first_not_fulfilling
 from work_tracker.text.common import Color
 
 
@@ -46,5 +46,5 @@ class RwrHandler(CommandHandler):
     def _change_rwr(self, date: Date, rwr: float):
         month: Date = date.fill_with_today().to_month_date()
         self.data.month[month].remote_work_ratio = rwr
-        new_target_minutes_total: int = sum([480 * self.data.month[month].fte if self.data.day[day].is_a_work_day else 0 for day in month.days_in_a_month()])
+        new_target_minutes_total: int = sum([480 * self.data.month[month].fte if self.data.day[day].day_type == DayType.WORKDAY else 0 for day in month.days_in_a_month()])
         self.data.month[month].target_minutes = new_target_minutes_total

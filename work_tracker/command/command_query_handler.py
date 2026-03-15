@@ -65,7 +65,7 @@ class CommandQueryHandler:
                 else ''
             self._history.add(KeyManager.encode(self.data), f"{multi_dates_text}{query.raw_text}")
         if result.error is not None:
-            self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.Brightred)
+            self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.from_key(Config.data.output.error_color))
         if result.change_active_date is not None:
             self.state.active_date = result.change_active_date
             if self.state.active_date == Date.today():

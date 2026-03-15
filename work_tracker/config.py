@@ -19,6 +19,17 @@ class CalendarCommandConfig(BaseModel):
     remote_background_color: str | None
     dayoff_foreground_color: str | None
     dayoff_background_color: str | None
+    # v2
+    remote_incomplete_background_color: str | None
+    remote_incomplete_foreground_color: str | None
+    office_incomplete_background_color: str | None
+    office_incomplete_foreground_color: str | None
+    absence_foreground_color: str | None
+    absence_background_color: str | None
+
+
+class FteCommandConfig(BaseModel): # v2
+    default_value: float
 
 
 class HelpCommandConfig(BaseModel):
@@ -28,10 +39,16 @@ class HelpCommandConfig(BaseModel):
     command_use_case_bullet_point_symbol: str
 
 
+class RwrCommandConfig(BaseModel): # v2
+    default_value: float
+
 class CommandConfig(BaseModel):
     undo_history_size: int
     calendar: CalendarCommandConfig
     help: HelpCommandConfig
+    # v2
+    fte: FteCommandConfig
+    rwr: RwrCommandConfig
 
 
 class InputConfig(BaseModel):
@@ -57,6 +74,8 @@ class FrameConfig(BaseModel):
 class OutputConfig(BaseModel):
     max_width: int
     frame: FrameConfig
+    # v2
+    error_color: str
 
 
 __config_version__: int = 2
@@ -80,9 +99,23 @@ class MainConfig(BaseModel):
         raw_data["input"]["time_add_prefix"] = raw_data.pop("time_add_prefix", "+")
         raw_data["input"]["time_subtract_prefix"] = raw_data.pop("time_subtract_prefix", "-")
         raw_data["input"]["keyword_prefix"] = raw_data.pop("keyword_prefix", "$")
-        
+
+        raw_data["command"]["calendar"]["absence_background_color"] = raw_data["command"]["calendar"].get("absence_background_color", None)
+        raw_data["command"]["calendar"]["absence_foreground_color"] = raw_data["command"]["calendar"].get("absence_foreground_color", "brightblue")
+        raw_data["command"]["calendar"]["office_incomplete_background_color"] = raw_data["command"]["calendar"].get("office_incomplete_background_color", None)
+        raw_data["command"]["calendar"]["office_incomplete_foreground_color"] = raw_data["command"]["calendar"].get("office_incomplete_foreground_color", "red")
+        raw_data["command"]["calendar"]["remote_incomplete_background_color"] = raw_data["command"]["calendar"].get("remote_incomplete_background_color", None)
+        raw_data["command"]["calendar"]["remote_incomplete_foreground_color"] = raw_data["command"]["calendar"].get("remote_incomplete_foreground_color", "green")
+
+        raw_data["command"].setdefault("fte", {})
+        raw_data["command"]["fte"]["default_value"] = raw_data["command"]["fte"].get("default_value", 1.0)
+        raw_data["command"].setdefault("rwr", {})
+        raw_data["command"]["rwr"]["default_value"] = raw_data["command"]["rwr"].get("default_value", 0.4)
+
+        raw_data["output"]["error_color"] = raw_data["output"].get("error_color", "brightred")
+
         raw_data["version"] = 2
-        
+
     @classmethod
     def _update_config_data_to_latest_version(cls, raw_data: dict[str, any]):
         # just like data, update to target version step by step: A -> A+1 -> A+2 -> ... -> B

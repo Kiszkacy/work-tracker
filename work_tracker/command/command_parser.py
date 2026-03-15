@@ -62,9 +62,7 @@ class CommandParser:
             else:
                 command_string: str = parser.next()
                 is_valid_command_string: bool = cls._is_valid_command_string(command_string)
-                if not is_valid_command_string and len(dates) == 1: # this is here to properly catch errors further ahead when reading arguments
-                    command: Command = CommandManager.date_command
-                elif not is_valid_command_string:
+                if not is_valid_command_string:
                     error = ParserErrorUnknownCommand(
                         received_name=command_string
                     )
@@ -250,8 +248,8 @@ class CommandParser:
         elif year_match:
             year = int(year_match.group())
             return Date(day=None, month=None, year=year)
-        elif text in month_map:
-            return Date(day=None, month=month_map[text], year=None)
+        elif text.lower() in month_map:
+            return Date(day=None, month=month_map[text.lower()], year=None)
         else:
             return None
 
@@ -340,7 +338,10 @@ class CommandParser:
         if "/" in text:
             return float(Fraction(text))
         elif "%" in text:
-            return float(text.strip('%')) / 100
+            try:
+                return float(text.strip('%')) / 100
+            except ValueError:
+                return None
         else:
             try:
                 value: Number = int(text)

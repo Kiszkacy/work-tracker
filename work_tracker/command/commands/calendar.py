@@ -4,17 +4,20 @@ from enum import Enum, auto
 
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument
-from work_tracker.common import Date, ReadonlyAppState, find_first_not_fulfilling
+from work_tracker.common import Date, AttendanceType, DayType, WorkLocation, ReadonlyAppState, find_first_not_fulfilling
 from work_tracker.config import Config, CalendarCommandConfig
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidDateCount
 from work_tracker.text.common import Color, frame_text
 
 
 class CalendarDateType(Enum):
+    Absence = auto()
     Dayoff = auto()
     Holiday = auto()
     Office = auto()
+    IncompleteOffice = auto()
     Remote = auto()
+    IncompleteRemote = auto()
     Weekend = auto()
 
 
@@ -75,11 +78,14 @@ class CalendarHandler(CommandHandler):
 
     def _get_each_date_type_dates(self, month: Date) -> dict[CalendarDateType, list[Date]]:
         return {
-            CalendarDateType.Dayoff: [date for date in month.days_in_a_month() if self.data.day[date].is_a_day_off],
-            CalendarDateType.Holiday: [date for date in month.days_in_a_month() if not self.data.day[date].is_a_work_day and not date.to_datetime().isoweekday() in (6, 7)],
-            CalendarDateType.Office: [date for date in month.days_in_a_month() if self.data.day[date].is_a_work_day and self.data.day[date].office_work and not self.data.day[date].is_a_day_off],
-            CalendarDateType.Remote: [date for date in month.days_in_a_month() if self.data.day[date].is_a_work_day and self.data.day[date].remote_work and not self.data.day[date].is_a_day_off],
-            CalendarDateType.Weekend: [date for date in month.days_in_a_month() if not self.data.day[date].is_a_work_day and date.to_datetime().isoweekday() in (6, 7)],
+            CalendarDateType.Absence: [date for date in month.days_in_a_month() if self.data.day[date].attendance_type == AttendanceType.ABSENCE],
+            CalendarDateType.Dayoff: [date for date in month.days_in_a_month() if self.data.day[date].attendance_type == AttendanceType.DAYOFF],
+            CalendarDateType.IncompleteOffice: [date for date in month.days_in_a_month() if self.data.day[date].work_location == WorkLocation.OFFICE and (self.data.day[date].minutes_at_work < self.data.day[date].target_minutes or self.data.day[date].target_minutes == 0)],
+            CalendarDateType.Office: [date for date in month.days_in_a_month() if self.data.day[date].work_location == WorkLocation.OFFICE],
+            CalendarDateType.IncompleteRemote: [date for date in month.days_in_a_month() if self.data.day[date].work_location == WorkLocation.REMOTE and (self.data.day[date].minutes_at_work < self.data.day[date].target_minutes or self.data.day[date].target_minutes == 0)],
+            CalendarDateType.Remote: [date for date in month.days_in_a_month() if self.data.day[date].work_location == WorkLocation.REMOTE],
+            CalendarDateType.Holiday: [date for date in month.days_in_a_month() if self.data.day[date].day_type == DayType.HOLIDAY],
+            CalendarDateType.Weekend: [date for date in month.days_in_a_month() if self.data.day[date].day_type == DayType.WEEKEND],
         }
 
     @staticmethod
@@ -87,10 +93,13 @@ class CalendarHandler(CommandHandler):
         calendar_config: CalendarCommandConfig = Config.data.command.calendar
 
         return {
+            CalendarDateType.Absence: CalendarHandler._get_color(calendar_config.absence_foreground_color, calendar_config.absence_background_color),
             CalendarDateType.Dayoff: CalendarHandler._get_color(calendar_config.dayoff_foreground_color, calendar_config.dayoff_background_color),
-            CalendarDateType.Holiday: CalendarHandler._get_color(calendar_config.holiday_foreground_color, calendar_config.holiday_background_color),
+            CalendarDateType.IncompleteOffice: CalendarHandler._get_color(calendar_config.office_incomplete_foreground_color, calendar_config.office_incomplete_background_color),
             CalendarDateType.Office: CalendarHandler._get_color(calendar_config.office_foreground_color, calendar_config.office_background_color),
+            CalendarDateType.IncompleteRemote: CalendarHandler._get_color(calendar_config.remote_incomplete_foreground_color, calendar_config.remote_incomplete_background_color),
             CalendarDateType.Remote: CalendarHandler._get_color(calendar_config.remote_foreground_color, calendar_config.remote_background_color),
+            CalendarDateType.Holiday: CalendarHandler._get_color(calendar_config.holiday_foreground_color, calendar_config.holiday_background_color),
             CalendarDateType.Weekend: CalendarHandler._get_color(calendar_config.weekend_foreground_color, calendar_config.weekend_background_color),
         }
 

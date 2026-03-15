@@ -2,7 +2,7 @@ from enum import Enum, auto
 
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument
-from work_tracker.common import Date, ReadonlyAppState, find_first_not_fulfilling, Mode, MonthData
+from work_tracker.common import Date, WorkLocation, ReadonlyAppState, find_first_not_fulfilling, Mode, MonthData
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidArgumentValue, CommandErrorInvalidDate, CommandErrorInvalidMode
 from work_tracker.text.common import about_symbol, Color
 
@@ -90,11 +90,11 @@ class MinutesHandler(CommandHandler):
             case CalculateType.Office:
                 total_minutes = month.target_minutes * (1.0 - month.remote_work_ratio)
                 if take_into_account_filled_dates:
-                    total_minutes -= sum(self.data.day[day].minutes_at_work for day in date.days_in_a_month() if self.data.day[day].office_work)
+                    total_minutes -= sum(self.data.day[day].minutes_at_work for day in date.days_in_a_month() if self.data.day[day].work_location == WorkLocation.OFFICE)
             case CalculateType.Remote:
                 total_minutes = month.target_minutes * month.remote_work_ratio
                 if take_into_account_filled_dates:
-                    total_minutes -= sum(self.data.day[day].minutes_at_work for day in date.days_in_a_month() if self.data.day[day].remote_work)
+                    total_minutes -= sum(self.data.day[day].minutes_at_work for day in date.days_in_a_month() if self.data.day[day].work_location == WorkLocation.REMOTE)
         
         total_minutes_per_day: float = total_minutes / day_count
         rounded_total_minutes_per_day: int = round(total_minutes_per_day)

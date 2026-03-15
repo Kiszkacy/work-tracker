@@ -4,7 +4,7 @@ from work_tracker.common import Date, AttendanceType, DayType, ReadonlyAppState,
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode
 
 
-class DayoffHandler(CommandHandler):
+class AbsenceHandler(CommandHandler):
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
             match state.mode:
@@ -18,7 +18,6 @@ class DayoffHandler(CommandHandler):
         elif date_count != 0 and argument_count == 0:
             if invalid_date := find_first_not_fulfilling(dates, lambda date: date.is_day_date() or date.is_month_date()):
                 return CommandHandlerResult(undoable=False, error=CommandErrorInvalidDate(self.command_name, received_date=invalid_date))
-                
             for date in dates:
                 if date.is_day_date():
                     self._handle_day(date.fill_with(state.active_date))
@@ -29,8 +28,8 @@ class DayoffHandler(CommandHandler):
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
 
     def _handle_day(self, date: Date):
-        date = date.fill_with_today().to_day_date()
-        self.data.day[date].attendance_type = AttendanceType.DAYOFF
+        filled_date: Date = date.fill_with_today().to_day_date()
+        self.data.day[filled_date].attendance_type = AttendanceType.ABSENCE
 
     def _handle_month(self, date: Date):
         date = date.fill_with_today().to_month_date()

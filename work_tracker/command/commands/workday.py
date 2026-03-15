@@ -1,6 +1,6 @@
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument
-from work_tracker.common import Date, Mode, find_first_not_fulfilling, ReadonlyAppState
+from work_tracker.common import Date, DayType, Mode, find_first_not_fulfilling, ReadonlyAppState
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode
 
 
@@ -30,14 +30,14 @@ class WorkdayHandler(CommandHandler):
         if self._is_current_month_target_from_fte(month_date):
             update_target_minutes = True
 
-        self.data.day[day_date].is_a_work_day = True
+        self.data.day[day_date].day_type = DayType.WORKDAY
 
         if update_target_minutes:
             self._update_month_target_minutes(month_date)
 
     def _is_current_month_target_from_fte(self, month: Date) -> bool:
-        return self.data.month[month].target_minutes == sum([480 * self.data.month[month].fte if self.data.day[day].is_a_work_day else 0 for day in month.days_in_a_month()])
+        return self.data.month[month].target_minutes == sum([480 * self.data.month[month].fte if self.data.day[day].day_type == DayType.WORKDAY else 0 for day in month.days_in_a_month()])
 
     def _update_month_target_minutes(self, month: Date):
-        new_target_minutes_total: int = sum([480 * self.data.month[month].fte if self.data.day[day].is_a_work_day else 0 for day in month.days_in_a_month()])
+        new_target_minutes_total: int = sum([480 * self.data.month[month].fte if self.data.day[day].day_type == DayType.WORKDAY else 0 for day in month.days_in_a_month()])
         self.data.month[month].target_minutes = new_target_minutes_total
