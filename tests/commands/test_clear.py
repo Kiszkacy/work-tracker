@@ -13,7 +13,6 @@ def test_init(clear_handler: ClearHandler):
 
 def test_should_clear_active_day(clear_handler: ClearHandler, random_date: Date):
     date: Date = random_date.to_day_date()
-
     clear_handler.data.day[date].minutes_at_work = 1 # TODO this theoretically should be enough to check if date was cleared/resetted
 
     result: CommandHandlerResult = handle_call(clear_handler, active_date=date)
@@ -24,7 +23,6 @@ def test_should_clear_active_day(clear_handler: ClearHandler, random_date: Date)
 
 def test_should_clear_active_month(clear_handler: ClearHandler, random_date: Date):
     month: Date = random_date.to_month_date()
-
     for day in month.days_in_a_month():
         clear_handler.data.day[day].minutes_at_work = 1
 
@@ -37,7 +35,6 @@ def test_should_clear_active_month(clear_handler: ClearHandler, random_date: Dat
 
 def test_should_clear_given_days(clear_handler: ClearHandler, random_dates: list[Date]):
     dates: list[Date] = [date.to_day_date() for date in random_dates]
-
     for date in dates:
         clear_handler.data.day[date].minutes_at_work = 1
 
@@ -51,7 +48,6 @@ def test_should_clear_given_days(clear_handler: ClearHandler, random_dates: list
 @pytest.mark.parametrize("random_dates", [{"unique_month_data": True}], indirect=True)
 def test_should_clear_given_months(clear_handler: ClearHandler, random_dates: list[Date]):
     months: list[Date] = [date.to_month_date() for date in random_dates]
-
     for month in months:
         for day in month.days_in_a_month():
             clear_handler.data.day[day].minutes_at_work = 1
