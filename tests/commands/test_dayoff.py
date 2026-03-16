@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from tests.conftest import handle_call
@@ -65,7 +67,7 @@ def test_should_set_to_dayoff_given_months_workdays(dayoff_handler: DayoffHandle
 
 
 def test_should_return_error_on_invalid_argument_count(dayoff_handler: DayoffHandler):
-    arguments: list[any] = ["value"]
+    arguments: list[Any] = ["value"]
 
     result: CommandHandlerResult = handle_call(dayoff_handler, arguments=arguments)
 

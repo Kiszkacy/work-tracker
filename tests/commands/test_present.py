@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from tests.conftest import handle_call
@@ -65,7 +67,7 @@ def test_should_set_to_present_given_months_workdays(present_handler: PresentHan
 
 
 def test_should_return_error_on_invalid_argument_count(present_handler: PresentHandler):
-    arguments: list[any] = ["value"]
+    arguments: list[Any] = ["value"]
 
     result: CommandHandlerResult = handle_call(present_handler, arguments=arguments)
 

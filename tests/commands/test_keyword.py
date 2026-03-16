@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from tests.conftest import TestInputOutput, handle_call
@@ -18,7 +20,7 @@ def test_should_output_keyword_list(keyword_handler: KeywordHandler):
 
 
 def test_should_return_error_on_invalid_argument_count(keyword_handler: KeywordHandler):
-    arguments: list[any] = ["value"]
+    arguments: list[Any] = ["value"]
 
     result: CommandHandlerResult = handle_call(keyword_handler, arguments=arguments)
 

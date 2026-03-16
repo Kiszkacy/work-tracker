@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from tests.conftest import handle_call
@@ -61,7 +63,7 @@ def test_should_clear_given_months(clear_handler: ClearHandler, random_dates: li
 
 
 def test_should_return_error_on_invalid_argument_count(clear_handler: ClearHandler):
-    arguments: list[any] = ["value"]
+    arguments: list[Any] = ["value"]
 
     result: CommandHandlerResult = handle_call(clear_handler, arguments=arguments)
 

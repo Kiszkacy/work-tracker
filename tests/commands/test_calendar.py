@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from tests.conftest import handle_call, TestInputOutput
@@ -19,7 +21,7 @@ def test_should_output_calendar(calendar_handler: CalendarHandler):
 
 
 def test_should_return_error_on_invalid_argument_count(calendar_handler: CalendarHandler):
-    arguments: list[any] = ["value"]
+    arguments: list[Any] = ["value"]
 
     result: CommandHandlerResult = handle_call(calendar_handler, arguments=arguments)
 

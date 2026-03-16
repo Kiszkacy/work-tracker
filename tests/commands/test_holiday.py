@@ -1,9 +1,11 @@
+from typing import Any
+
 import pytest
 
 from tests.conftest import handle_call
 from work_tracker.command.command_handler import CommandHandlerResult
 from work_tracker.command.commands.holiday import HolidayHandler
-from work_tracker.common import DayType, Date, DayType, Mode
+from work_tracker.common import Date, DayType, Mode
 
 
 @pytest.mark.order(1)
@@ -56,8 +58,9 @@ def test_should_not_update_month_target_if_target_was_changed(holiday_handler: H
     assert result.error is None
     assert holiday_handler.data.month[month_date].target_minutes == target_before
 
+
 def test_should_return_error_on_invalid_argument_count(holiday_handler: HolidayHandler):
-    arguments: list[any] = ["value"]
+    arguments: list[Any] = ["value"]
 
     result: CommandHandlerResult = handle_call(holiday_handler, arguments=arguments)
 
