@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from dataclasses import dataclass
 
-from work_tracker.config import Config
 from work_tracker.common import Mode, ReadonlyAppState, classproperty
 
 
@@ -136,26 +135,3 @@ class KeywordManager:
                 return ""
         
         return ""
-
-    @classmethod
-    def expand_keywords(cls, text: str, state: ReadonlyAppState) -> str:
-        prefix: str = Config.data.input.keyword_prefix
-        
-        replacements = []
-        
-        # Get all keywords and their values
-        for keyword_info in cls.get_all_keywords(state):
-            keyword: str = keyword_with_prefix[len(prefix):]
-            value = cls.get_keyword_value(keyword_without_prefix, state)
-            
-            if value is not None and keyword_with_prefix in text:
-                replacements.append((keyword_with_prefix, value))
-        
-        # Sort by length (longest first) to avoid partial replacements
-        replacements.sort(key=lambda x: len(x[0]), reverse=True)
-        
-        # Perform replacements
-        for keyword, value in replacements:
-            text = text.replace(keyword, value)
-        
-        return text

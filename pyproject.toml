@@ -56,6 +56,9 @@ include_namespace_packages = true
 omit = ["**/__init__.py"]
 skip_empty = true
 
+[tool.ruff.lint]
+ignore = ["F811"]
+
 [dependency-groups]
 dev = [
     "pytest>=8.3.4",

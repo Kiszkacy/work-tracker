@@ -134,7 +134,7 @@ class WorkTracker:
         self.data = AppData(country_code=country_code)
         CheckpointManager.save("initial", self.data, add_suffix_timestamp=True)
 
-        self.io.write(f"Everything is set up and ready.", color=Color.Cyan, end=" ")
+        self.io.write("Everything is set up and ready.", color=Color.Cyan, end=" ")
         self.io.write(f"To view a list of available commands type {Color.Brightblue.value}help{Color.Reset.value}.", end=" ")
         self.io.write(f"For detailed information about a specific command use {Color.Brightblue.value}help <command_name>{Color.Reset.value}.", end=" ")
         self.io.write(f"It is recommended that you use {Color.Brightblue.value}tutorial{Color.Reset.value} command to quickly get familiar with the available features.", end=" ")
@@ -182,7 +182,7 @@ class WorkTracker:
 
             latest_version: str = result.stdout.strip().split("\n")[-1].split()[-1]
             return latest_version if installed_version != latest_version else None
-        except subprocess.SubprocessError as e:
+        except subprocess.SubprocessError:
             raise VersionCheckError("Subprocess error during version check.")
         except Exception as e:
             raise VersionCheckError(f"Unexpected error: {e}")
@@ -211,7 +211,7 @@ class WorkTracker:
         sys.exit()
 
     def handle_exit_signal(self): # TODO check if this works | no it doesnt :(
-        self._at_crash_exit(crash_message=f"received exit signal")
+        self._at_crash_exit(crash_message="received exit signal")
 
     def _run(self):
         error_log_last_processed_input: str = "None"

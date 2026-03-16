@@ -16,7 +16,7 @@ class CommandInitializer:
 
         commands_dict: dict[str, CommandTemplate] = {command.name: command for command in commands}
         if len(commands_dict.keys()) != len(commands):
-            raise RuntimeError(f"Could not initialize commands, there are duplicated command names.")
+            raise RuntimeError("Could not initialize commands, there are duplicated command names.")
 
         cls._find_not_conflicting_shortest_command_string_for(commands)
 

@@ -4,7 +4,7 @@ from fractions import Fraction
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument
 from work_tracker.common import Date, DayData, Mode, MonthData, ReadonlyAppState, DayType, WorkLocation, AttendanceType, find_first_not_fulfilling
-from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate
+from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode
 from work_tracker.text.common import Color, frame_text
 
 

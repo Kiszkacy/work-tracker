@@ -1,5 +1,4 @@
 import sys
-import datetime
 
 from work_tracker.command.common import CommandArgument
 from work_tracker.error import CommandErrorInvalidArgumentCount

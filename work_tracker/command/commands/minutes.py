@@ -106,7 +106,7 @@ class MinutesHandler(CommandHandler):
             self.io.write(f"{about_symbol if not is_exact_minute_count else ''}{rounded_total_minutes_per_day} minutes", color=Color.Brightblue, end=" ")
         else:
             self.io.write(f"{about_symbol if not is_exact_minute_count else ''}{hours}:{minutes:02}", color=Color.Brightblue, end=" ")
-        self.io.write(f"each day", end=" ")
+        self.io.write("each day", end=" ")
         self.io.write(f"({Color.Brightblue.value}{day_count}{Color.Reset.value} times)", end="")
         match calculate_type:
             case CalculateType.Office:
