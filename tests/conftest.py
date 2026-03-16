@@ -8,10 +8,42 @@ from pytest_mock import MockerFixture
 from work_tracker import WorkTracker
 from work_tracker.command.command_handler import CommandHandler, CommandHandlerResult
 from work_tracker.command.command_history import CommandHistoryEntry
+from work_tracker.command.commands.absence import AbsenceHandler
+from work_tracker.command.commands.alias import AliasHandler
 from work_tracker.command.commands.calendar import CalendarHandler
+from work_tracker.command.commands.checkpoint import CheckpointHandler
 from work_tracker.command.commands.clear import ClearHandler
+from work_tracker.command.commands.config import ConfigHandler
+from work_tracker.command.commands.dayoff import DayoffHandler
+from work_tracker.command.commands.days import DaysHandler
+from work_tracker.command.commands.deletealias import DeletealiasHandler
+from work_tracker.command.commands.deletemacro import DeletemacroHandler
+from work_tracker.command.commands.done import DoneHandler
+from work_tracker.command.commands.end import EndHandler
 from work_tracker.command.commands.exit import ExitHandler
 from work_tracker.command.commands.fte import FteHandler
+from work_tracker.command.commands.help import HelpHandler
+from work_tracker.command.commands.history import HistoryHandler
+from work_tracker.command.commands.holiday import HolidayHandler
+from work_tracker.command.commands.info import InfoHandler
+from work_tracker.command.commands.key import KeyHandler
+from work_tracker.command.commands.keyword import KeywordHandler
+from work_tracker.command.commands.macro import MacroHandler
+from work_tracker.command.commands.minutes import MinutesHandler
+from work_tracker.command.commands.office import OfficeHandler
+from work_tracker.command.commands.present import PresentHandler
+from work_tracker.command.commands.redo import RedoHandler
+from work_tracker.command.commands.remote import RemoteHandler
+from work_tracker.command.commands.rollback import RollbackHandler
+from work_tracker.command.commands.rwr import RwrHandler
+from work_tracker.command.commands.start import StartHandler
+from work_tracker.command.commands.status import StatusHandler
+from work_tracker.command.commands.target import TargetHandler
+from work_tracker.command.commands.tutorial import TutorialHandler
+from work_tracker.command.commands.undo import UndoHandler
+from work_tracker.command.commands.version import VersionHandler
+from work_tracker.command.commands.workday import WorkdayHandler
+from work_tracker.command.commands.zero import ZeroHandler
 from work_tracker.command.common import CommandArgument
 from work_tracker.common import AppData, Date, Mode, ReadonlyAppState, classproperty
 from work_tracker.text.input_output_handler import InputOutputHandler
@@ -194,6 +226,22 @@ def random_dates(request) -> list[Date]:
 
 
 @pytest.fixture(scope="function")
+def absence_handler(mocker: MockerFixture) -> AbsenceHandler:
+    return AbsenceHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def alias_handler(mocker: MockerFixture) -> AliasHandler:
+    return AliasHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
 def calendar_handler(mocker: MockerFixture) -> CalendarHandler:
     return CalendarHandler(
         work_data=sample_data(),
@@ -202,8 +250,72 @@ def calendar_handler(mocker: MockerFixture) -> CalendarHandler:
 
 
 @pytest.fixture(scope="function")
+def checkpoint_handler(mocker: MockerFixture) -> CheckpointHandler:
+    return CheckpointHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
 def clear_handler(mocker: MockerFixture) -> ClearHandler:
     return ClearHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def config_handler(mocker: MockerFixture) -> ConfigHandler:
+    return ConfigHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def dayoff_handler(mocker: MockerFixture) -> DayoffHandler:
+    return DayoffHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def days_handler(mocker: MockerFixture) -> DaysHandler:
+    return DaysHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def deletealias_handler(mocker: MockerFixture) -> DeletealiasHandler:
+    return DeletealiasHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def deletemacro_handler(mocker: MockerFixture) -> DeletemacroHandler:
+    return DeletemacroHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def done_handler(mocker: MockerFixture) -> DoneHandler:
+    return DoneHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def end_handler(mocker: MockerFixture) -> EndHandler:
+    return EndHandler(
         work_data=sample_data(),
         io=mock_io(mocker)
     )
@@ -220,6 +332,182 @@ def exit_handler(mocker: MockerFixture) -> ExitHandler:
 @pytest.fixture(scope="function")
 def fte_handler(mocker: MockerFixture) -> FteHandler:
     return FteHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def help_handler(mocker: MockerFixture) -> HelpHandler:
+    return HelpHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def history_handler(mocker: MockerFixture) -> HistoryHandler:
+    return HistoryHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def holiday_handler(mocker: MockerFixture) -> HolidayHandler:
+    return HolidayHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def info_handler(mocker: MockerFixture) -> InfoHandler:
+    return InfoHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def key_handler(mocker: MockerFixture) -> KeyHandler:
+    return KeyHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def keyword_handler(mocker: MockerFixture) -> KeywordHandler:
+    return KeywordHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def macro_handler(mocker: MockerFixture) -> MacroHandler:
+    return MacroHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def minutes_handler(mocker: MockerFixture) -> MinutesHandler:
+    return MinutesHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def office_handler(mocker: MockerFixture) -> OfficeHandler:
+    return OfficeHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def present_handler(mocker: MockerFixture) -> PresentHandler:
+    return PresentHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def redo_handler(mocker: MockerFixture) -> RedoHandler:
+    return RedoHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def remote_handler(mocker: MockerFixture) -> RemoteHandler:
+    return RemoteHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def rollback_handler(mocker: MockerFixture) -> RollbackHandler:
+    return RollbackHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def rwr_handler(mocker: MockerFixture) -> RwrHandler:
+    return RwrHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def start_handler(mocker: MockerFixture) -> StartHandler:
+    return StartHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def status_handler(mocker: MockerFixture) -> StatusHandler:
+    return StatusHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def target_handler(mocker: MockerFixture) -> TargetHandler:
+    return TargetHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def tutorial_handler(mocker: MockerFixture) -> TutorialHandler:
+    return TutorialHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def undo_handler(mocker: MockerFixture) -> UndoHandler:
+    return UndoHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def version_handler(mocker: MockerFixture) -> VersionHandler:
+    return VersionHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def workday_handler(mocker: MockerFixture) -> WorkdayHandler:
+    return WorkdayHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def zero_handler(mocker: MockerFixture) -> ZeroHandler:
+    return ZeroHandler(
         work_data=sample_data(),
         io=mock_io(mocker)
     )
