@@ -11,7 +11,7 @@ def test_should_correctly_parse_different_times():
     test_cases: list[tuple[str, TimeArgument]] = [
         ("8:00", TimeArgument(minutes=480, type=TimeArgumentType.Overwrite)),
         ("7h", TimeArgument(minutes=420, type=TimeArgumentType.Overwrite)),
-        # ("6 h", TimeArgument(minutes=360, type=TimeArgumentType.Overwrite)), # this case wont work because of the 'h' alias
+        # ("6 h", TimeArgument(minutes=360, type=TimeArgumentType.Overwrite)), # this case will not work because of the 'h' alias
         ("5hours", TimeArgument(minutes=300, type=TimeArgumentType.Overwrite)),
         ("4 hours", TimeArgument(minutes=240, type=TimeArgumentType.Overwrite)),
         ("3hour", TimeArgument(minutes=180, type=TimeArgumentType.Overwrite)),
@@ -81,20 +81,24 @@ def test_should_correctly_parse_different_dates():
         assert parse_result.queries[0].dates[0] == expected
 
 
-# @pytest.mark.order(1)
-# def test_should_correctly_parse_multiple_dates():
-#     test_cases: list[tuple[str, list[Date]]] = [
-#         ("22. 23. 24.", [Date(year=None, month=None, day=22), Date(year=None, month=None, day=23), Date(year=None, month=None, day=24)]),
-#         ("22. 23. 24.", [Date(year=None, month=None, day=22), Date(year=None, month=None, day=23), Date(year=None, month=None, day=24)]),
-#         ("22. 23. 24.", [Date(year=None, month=None, day=22), Date(year=None, month=None, day=23), Date(year=None, month=None, day=24)]),
-#     ]
+@pytest.mark.order(index=1, after=["test_should_correctly_parse_different_times", "test_should_correctly_parse_different_dates"])
+def test_should_correctly_parse_multiple_dates():
+    test_cases: list[tuple[str, list[Date]]] = [
+        ("22. 23.", [Date(year=None, month=None, day=22), Date(year=None, month=None, day=23)]),
+        ("18. 16. 17. 15.", [Date(year=None, month=None, day=18), Date(year=None, month=None, day=16), Date(year=None, month=None, day=17), Date(year=None, month=None, day=15)]),
+        ("30. 29. 28.", [Date(year=None, month=None, day=30), Date(year=None, month=None, day=29), Date(year=None, month=None, day=28)]),
 
-#     for text, expected in test_cases:
-#         data: AppData = sample_data()
-#         parse_result: ParseResult = CommandParser.parse(text, data)
-#         assert parse_result.error is None
-#         assert len(parse_result.queries) == 1
-#         assert parse_result.queries[0].command.name == "__date"
-#         assert len(parse_result.queries[0].arguments) == 0
-#         assert parse_result.queries[0].date_count == 1
-#         assert parse_result.queries[0].dates[0] == expected
+        ("01.02 02. .03.2024 .4.", [Date(year=None, month=2, day=1), Date(year=None, month=None, day=2), Date(year=2024, month=3, day=None), Date(year=None, month=4, day=None)]),
+        ("18. jun 06.07.99", [Date(year=None, month=None, day=18), Date(year=None, month=6, day=None), Date(year=1999, month=7, day=6)]),
+    ]
+
+    for text, expected in test_cases:
+        data: AppData = sample_data()
+        parse_result: ParseResult = CommandParser.parse(text + " 2h", data)
+        assert parse_result.error is None
+        assert len(parse_result.queries) == 1
+        assert parse_result.queries[0].command.name == "__time"
+        assert len(parse_result.queries[0].arguments) == 1
+        assert parse_result.queries[0].date_count == len(expected)
+        for index, date in enumerate(parse_result.queries[0].dates):
+            assert date == expected[index]
