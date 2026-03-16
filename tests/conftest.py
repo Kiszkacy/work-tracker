@@ -1,5 +1,6 @@
 import datetime
 import random
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -182,8 +183,8 @@ def reset_io_buffer():
     TestInputOutput.clear()
 
 
-def get_fixture_params(request) -> dict[str, any]:
-    params: dict[str, any] = {}
+def get_fixture_params(request) -> dict[str, Any]:
+    params: dict[str, Any] = {}
     if hasattr(request, "param"):
         params = request.param if isinstance(request.param, dict) else {}
     return params
@@ -191,7 +192,7 @@ def get_fixture_params(request) -> dict[str, any]:
 
 @pytest.fixture(scope="function")
 def random_date(request) -> Date:
-    params: dict[str, any] = get_fixture_params(request)
+    params: dict[str, Any] = get_fixture_params(request)
     not_today: bool = params.get("not_today", False)
     must_be_workday: bool = params.get("must_be_workday", False)
     country_code: str = params.get("country_code", "PL")
@@ -207,7 +208,7 @@ def random_date(request) -> Date:
 
 @pytest.fixture(scope="function")
 def random_dates(request) -> list[Date]:
-    params: dict[str, any] = get_fixture_params(request)
+    params: dict[str, Any] = get_fixture_params(request)
     count: int = params.get("count", 5) # default count = 5
     unique_month_data: bool = params.get("unique_month_data", False)
 
