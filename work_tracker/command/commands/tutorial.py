@@ -42,24 +42,22 @@ class TutorialHandler(CommandHandler):
         ).strip(),
         (
             f" By default, {Color.Brightblue.value}WorkTracker{Color.Reset.value} assumes that you work full-time and have 40% remote work ratio."
+            f" You can change the default settings to better reflect your work schedule and preferences via the {Color.Brightblue.value}config{Color.Reset.value} command."
             f" You can adjust the Full-Time Equivalent (FTE) for the current month by using the {Color.Brightblue.value}fte{Color.Reset.value} command."
             f" Additionally, the {Color.Brightblue.value}rwr{Color.Reset.value} command allows you to modify the required remote work ratio."
             f" Both of these commands are applicable in the month context."
             
-            f"\n\nThe {Color.Brightblue.value}calendar{Color.Reset.value} command provides a calendar view with marked days, highlighting  weekends, holidays, office or remote workdays and any off-days."
-            f" You can manually designate specific dates as holidays, workdays, off-days and office or remote workdays using the"
+            f"\n\nThe {Color.Brightblue.value}calendar{Color.Reset.value} command provides a calendar view with marked days, highlighting  weekends, holidays, office or remote workdays and any off-days or absences."
+            f" You can manually designate specific dates as holidays, workdays, off-days, absences and office or remote workdays using the"
             f" {Color.Brightblue.value}holiday{Color.Reset.value}, {Color.Brightblue.value}workday{Color.Reset.value}, {Color.Brightblue.value}offday{Color.Reset.value},"
-            f" {Color.Brightblue.value}office{Color.Reset.value} and {Color.Brightblue.value}remote{Color.Reset.value} commands, respectively."
-            
-            f"\n\nCurrently, until the {Color.Brightblue.value}setup{Color.Reset.value}, {Color.Brightblue.value}calculate{Color.Reset.value} and {Color.Brightblue.value}recalculate{Color.Reset.value}"
-            f" commands are implemented, you will need to manually enter your work schedule for each month."
-            f" These upcoming features will automatically generate a suggested schedule and allocate the required amount of time to be spent working each day."
+            f" {Color.Brightblue.value}absence{Color.Reset.value}, {Color.Brightblue.value}office{Color.Reset.value} and {Color.Brightblue.value}remote{Color.Reset.value} commands, respectively."
         ).strip(),
         (
             f" The {Color.Brightblue.value}minutes{Color.Reset.value} and {Color.Brightblue.value}days{Color.Reset.value}"
             f" commands allow you to calculate the remaining number of days or the time left to meet your monthly work quota."
             f" {Color.Brightblue.value}WorkTracker{Color.Reset.value} also offers several additional useful commands,"
             f" such as creating macros with the {Color.Brightblue.value}macro{Color.Reset.value} command,"
+            f" configuring aliases with the {Color.Brightblue.value}alias{Color.Reset.value} command,"
             f" setting up checkpoints with the {Color.Brightblue.value}checkpoint{Color.Reset.value} command,"
             f" and adjusting {Color.Brightblue.value}WorkTracker{Color.Reset.value}'s behavior via the {Color.Brightblue.value}config{Color.Reset.value} command."
             
