@@ -35,4 +35,4 @@ class PresentHandler(CommandHandler):
         date = date.fill_with_today().to_month_date()
         for day in date.days_in_a_month():
             if self.data.day[day].day_type == DayType.WORKDAY:
-                self._handle_day(date)
+                self._handle_day(day)
