@@ -35,7 +35,6 @@ def test_should_set_to_holiday_given_days(holiday_handler: HolidayHandler, rando
     assert result.error is None
 
 
-
 @pytest.mark.parametrize("random_date", [{"must_be_workday": True}], indirect=True)
 def test_should_update_month_target_if_target_was_unchanged(holiday_handler: HolidayHandler, random_date: Date):
     month_date: Date = random_date.to_month_date()
@@ -44,7 +43,7 @@ def test_should_update_month_target_if_target_was_unchanged(holiday_handler: Hol
     result: CommandHandlerResult = handle_call(holiday_handler, active_date=random_date)
 
     assert result.error is None
-    assert holiday_handler.data.month[month_date].target_minutes != target_before
+    assert holiday_handler.data.month[month_date].target_minutes < target_before
 
 
 @pytest.mark.parametrize("random_date", [{"must_be_workday": True}], indirect=True)
