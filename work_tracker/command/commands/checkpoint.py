@@ -1,11 +1,7 @@
 import datetime
 import os
-import re
-from dataclasses import dataclass
 
-from path import Path
-
-from work_tracker.checkpoint_manager import CheckpointManager
+from work_tracker.checkpoint_manager import CheckpointManager, CheckpointTemplate
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument
 from work_tracker.common import Date, ReadonlyAppState
@@ -13,50 +9,11 @@ from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInv
 from work_tracker.text.common import Color, wrap_text, frame_text, strip_ansi
 
 
-@dataclass(frozen=True)
-class CheckpointTemplate:
-    path: Path
-    name: str
-    date: str
-    persistent: bool
-
-# TODO: fix rollback
-# TODO: handle same name checkpoints
-
 class CheckpointHandler(CommandHandler):
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
-            checkpoints: list[CheckpointTemplate] = []
-            for index, checkpoint_path in enumerate([checkpoint for checkpoint in CheckpointManager.all_temporary_checkpoints() if checkpoint.name.startswith("user.")]): # TODO hardcoded 'user.'
-                raw_name: str = checkpoint_path.name.removesuffix('.save.checkpoint') # TODO hardcoded '.save.checkpoint'
-                match: re.Match = re.match(r"user\.(.+?)__(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})", raw_name)
-                if match:
-                    name: str = match.group(1)
-                    date: str = match.group(2)
-                else:
-                    name: str = raw_name
-                    date: str = "-"
-                checkpoints.append(CheckpointTemplate(
-                    path=checkpoint_path,
-                    name=name,
-                    date=date,
-                    persistent=False
-                ))
-            for index, checkpoint_path in enumerate([checkpoint for checkpoint in CheckpointManager.all_persistent_checkpoints() if checkpoint.name.startswith("user.")]):
-                raw_name: str = checkpoint_path.name.removesuffix('.save.checkpoint') # TODO hardcoded '.save.checkpoint'
-                match: re.Match = re.match(r"user\.(.+?)__(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})", raw_name)
-                if match:
-                    name: str = match.group(1)
-                    date: str = match.group(2)
-                else:
-                    name: str = raw_name
-                    date: str = "-"
-                checkpoints.append(CheckpointTemplate(
-                    path=checkpoint_path,
-                    name=name,
-                    date=date,
-                    persistent=True
-                ))
+            checkpoints: list[CheckpointTemplate] = [checkpoint for checkpoint in CheckpointManager.checkpoints() if checkpoint.name.startswith(CheckpointManager.usermade_checkpoint_prefix)]
+
             if len(checkpoints) == 0:
                 self.io.output(f"No checkpoints were yet created, create one via {Color.Brightblue.value}checkpoint <name>{Color.Reset.value}.")
                 return CommandHandlerResult(undoable=False)
@@ -81,15 +38,15 @@ class CheckpointHandler(CommandHandler):
                 indent_size: int = longest_index_size + len(separator) + longest_date_size + len(separator)
                 indent: str = " " * indent_size
 
+                display_name: str = checkpoint.name.removeprefix(CheckpointManager.usermade_checkpoint_prefix)
                 wrapped_name: str = wrap_text(
-                    text=checkpoint.name,
+                    text=display_name,
                     indent=indent,
                     omit_first_line_indent=True,
                     frame_wrap=True
                 )
 
-                is_temporary: bool = not checkpoint.persistent
-                if is_temporary:
+                if not checkpoint.persistent:
                     color: str = Color.Red.value if index % 2 == 1 else Color.Brightred.value
                 else:
                     color: str = Color.Brightblack.value if index % 2 == 1 else Color.Reset.value

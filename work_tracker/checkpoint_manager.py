@@ -2,12 +2,22 @@ import datetime
 import lzma
 import os
 import pickle
+import re
 from dataclasses import dataclass, field
 from enum import Enum, auto
 
 from path import Path
 
-from .common import AppData, get_data_path, get_cache_path
+from .common import AppData, get_data_path, get_cache_path, classproperty
+
+
+@dataclass(frozen=True)
+class CheckpointTemplate:
+    path: Path
+    full_identifier: str
+    name: str
+    date: str
+    persistent: bool
 
 
 # deprecated classes for unpickling old data - only used during initial load after update
@@ -44,44 +54,81 @@ class _CompatibilityUnpickler(pickle.Unpickler):
 
 
 class CheckpointManager:
+    _usermade_checkpoint_prefix: str = "user."
+    _checkpoint_suffix: str = ".save.checkpoint"
+
+    @classproperty
+    def usermade_checkpoint_prefix(cls) -> str:
+        return cls._usermade_checkpoint_prefix
+
+    @classproperty
+    def checkpoint_suffix(cls) -> str:
+        return cls._checkpoint_suffix
+
     @classmethod
     def load(cls, identifier: str, persistent_checkpoint: bool = True) -> AppData | None: # TODO os exceptions
         if not persistent_checkpoint:
-            for checkpoint_path in cls.all_temporary_checkpoints():
-                name, date = checkpoint_path.name.removesuffix('.save.checkpoint').split("__") # TODO hardcoded '.save.checkpoint'
-                if name == identifier:
-                    identifier = f"{name}__{date}"
+            for checkpoint in cls.temporary_checkpoints():
+                base_name: str = checkpoint.full_identifier.removesuffix(f"__{checkpoint.date}") if checkpoint.date != "-" else checkpoint.full_identifier
+                if base_name == identifier:
+                    identifier = checkpoint.full_identifier
 
-        path: Path = (get_data_path() if persistent_checkpoint else get_cache_path()).joinpath(f"{identifier}.save.checkpoint")
+        path: Path = (get_data_path() if persistent_checkpoint else get_cache_path()).joinpath(f"{identifier}{cls._checkpoint_suffix}")
         if not path.exists():
             return None
         with lzma.open(path, "rb") as file:
             data: AppData = _CompatibilityUnpickler(file).load()
         return data
 
-    @staticmethod
-    def save(identifier: str, data: AppData, persistent_checkpoint: bool = True, add_suffix_timestamp: bool = False, created_by_user: bool = False): # TODO os exceptions
+    @classmethod
+    def save(cls, identifier: str, data: AppData, persistent_checkpoint: bool = True, add_suffix_timestamp: bool = False, created_by_user: bool = False): # TODO os exceptions
         full_identifier: str = identifier if not add_suffix_timestamp else f"{identifier}__{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-        path: Path = (get_data_path() if persistent_checkpoint else get_cache_path()).joinpath(f"{'user.' if created_by_user else ''}{full_identifier}.save.checkpoint") # TODO hardcoded 'user.'
+        path: Path = (get_data_path() if persistent_checkpoint else get_cache_path()).joinpath(f"{cls._usermade_checkpoint_prefix if created_by_user else ''}{full_identifier}{cls._checkpoint_suffix}")
         with lzma.open(path, "wb") as file:
             pickle.dump(data, file)
 
     @classmethod
     def load_latest(cls) -> AppData | None: # TODO os exceptions
-        files: list[Path] = cls.all_persistent_checkpoints()
-        if not files:
+        checkpoints: list[CheckpointTemplate] = cls.persistent_checkpoints()
+        if not checkpoints:
             return None
 
-        newest_file: Path = max(files, key=os.path.getctime) # TODO this sorting might be unclear for user
-        return cls.load(os.path.basename(newest_file.name.split('.')[0]))
+        newest: CheckpointTemplate = max(checkpoints, key=lambda c: os.path.getctime(c.path)) # TODO this sorting might be unclear for user
+        return cls.load(newest.full_identifier)
 
-    @staticmethod
-    def all_persistent_checkpoints() -> list[Path]: # TODO os exceptions
-        return [get_data_path().joinpath(file) for file in os.listdir(get_data_path()) if file.endswith(".save.checkpoint") and os.path.isfile(get_data_path().joinpath(file))]
+    @classmethod
+    def persistent_checkpoints(cls) -> list[CheckpointTemplate]: # TODO os exceptions
+        paths: list[Path] = [get_data_path().joinpath(file) for file in os.listdir(get_data_path()) if file.endswith(cls._checkpoint_suffix) and os.path.isfile(get_data_path().joinpath(file))]
+        return [cls._parse_checkpoint(path, persistent=True) for path in paths]
 
-    @staticmethod
-    def all_temporary_checkpoints() -> list[Path]: # TODO os exceptions
-        return [get_cache_path().joinpath(file) for file in os.listdir(get_cache_path()) if file.endswith(".save.checkpoint") and os.path.isfile(get_cache_path().joinpath(file))]
+    @classmethod
+    def temporary_checkpoints(cls) -> list[CheckpointTemplate]: # TODO os exceptions
+        paths: list[Path] = [get_cache_path().joinpath(file) for file in os.listdir(get_cache_path()) if file.endswith(cls._checkpoint_suffix) and os.path.isfile(get_cache_path().joinpath(file))]
+        return [cls._parse_checkpoint(path, persistent=False) for path in paths]
+
+    @classmethod
+    def checkpoints(cls) -> list[CheckpointTemplate]: # TODO os exceptions
+        return cls.temporary_checkpoints() + cls.persistent_checkpoints()
+
+    @classmethod
+    def _parse_checkpoint(cls, path: Path, persistent: bool) -> CheckpointTemplate:
+        raw_name: str = path.name.removesuffix(cls._checkpoint_suffix)
+        match: re.Match = re.match(r"(.+?)__(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})$", raw_name)
+        if match:
+            full_identifier: str = raw_name
+            name: str = match.group(1)
+            date: str = match.group(2)
+        else:
+            full_identifier: str = raw_name
+            name: str = raw_name
+            date: str = "-"
+        return CheckpointTemplate(
+            path=path,
+            full_identifier=full_identifier,
+            name=name,
+            date=date,
+            persistent=persistent
+        )
 
     @staticmethod
     def clear_cache():
