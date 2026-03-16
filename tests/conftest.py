@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
+from workalendar.registry import registry
 
 from work_tracker import WorkTracker
 from work_tracker.command.command_handler import CommandHandler, CommandHandlerResult
@@ -192,12 +193,16 @@ def get_fixture_params(request) -> dict[str, any]:
 def random_date(request) -> Date:
     params: dict[str, any] = get_fixture_params(request)
     not_today: bool = params.get("not_today", False)
+    must_be_workday: bool = params.get("must_be_workday", False)
+    country_code: str = params.get("country_code", "PL")
 
     while date := generate_date():
         if not_today and date == Date.today():
             continue
+        if must_be_workday and not registry.get_calendars().get(country_code)().is_working_day(date.to_datetime()):
+            continue
         break
-    return generate_date()
+    return date
 
 
 @pytest.fixture(scope="function")
