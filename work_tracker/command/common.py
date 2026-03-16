@@ -470,7 +470,7 @@ _global_command_templates: list[CommandTemplate] = [
             full_help_description=(
                 f" Macros act as reusable command sequences, allowing users to define custom methods that execute multiple commands (or other macros) in order."
                 f" A macro consists of an identifier (name) and optional or required arguments, which can be used within the command sequence."
-                f" Macros can also function as simple aliases for other commands."
+                f" The parser processes macros like any other command. Consequently, if you specify a date before a macro, that date is passed down to each individual command contained inside."
                 f"\n\nMacro arguments must be specified using the format {Color.Brightblue.value}<argument_name>{Color.Reset.value},"
                 f" and the first word after the macro identifier (excluding arguments in {Color.Brightblue.value}<>{Color.Reset.value}) marks the beginning of the macro's command sequence."
                 f" These arguments can be referenced throughout the sequence by using the format {Color.Brightblue.value}<argument_name>{Color.Reset.value}."
