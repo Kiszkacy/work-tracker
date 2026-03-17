@@ -2,4 +2,5 @@
 o8 | office && 8:00
 r8 | remote && 8:00
 o <amount> | office && target <amount> 
-r <amount> | remote && target <amount> 
+r <amount> | remote && target <amount>
+save <name=$today> | checkpoint <name> permanent

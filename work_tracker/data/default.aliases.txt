@@ -6,3 +6,4 @@ q | exit && exit
 ms | $month status
 mo | minutes office
 mr | minutes remote
+s | save
