@@ -12,7 +12,8 @@ def test_init(exit_handler: ExitHandler):
 
 def test_should_exit_app_in_today_mode(exit_handler: ExitHandler, mocker):
     mock_exit = mocker.patch("sys.exit")
-    
+    mocker.patch("work_tracker.command.commands.exit.CheckpointManager.save")
+
     _ = handle_call(exit_handler, mode=Mode.Today)
 
     mock_exit.assert_called_once()
@@ -21,10 +22,6 @@ def test_should_exit_app_in_today_mode(exit_handler: ExitHandler, mocker):
 def test_should_change_to_today_if_not_in_today_mode(exit_handler: ExitHandler, random_date: Date, mocker):
     mock_exit = mocker.patch("sys.exit")
     date: Date = random_date.to_day_date()
-
-    # TODO: add this check in random_date ?
-    # if date == Date.today():
-    #     date = date.add_days(1)
         
     result = handle_call(exit_handler, active_date=date, mode=Mode.Day)
 
