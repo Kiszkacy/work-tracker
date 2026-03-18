@@ -16,7 +16,7 @@ class ZeroHandler(CommandHandler):
                     return CommandHandlerResult(undoable=False, error=CommandErrorInvalidMode(self.command_name, mode=state.mode))
             return CommandHandlerResult(undoable=True)
         elif date_count != 0 and argument_count == 0:
-            if invalid_date := find_first_not_fulfilling(dates, lambda date: date.is_day_date()):
+            if invalid_date := find_first_not_fulfilling(dates, lambda date: date.is_day_date() or date.is_month_date()):
                 return CommandHandlerResult(undoable=False, error=CommandErrorInvalidDate(self.command_name, received_date=invalid_date))
             for date in dates:
                 if date.is_day_date():

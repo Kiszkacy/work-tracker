@@ -14,19 +14,19 @@ class RwrHandler(CommandHandler):
             return CommandHandlerResult(undoable=False)
         elif date_count == 0 and argument_count == 1:
             match state.mode:
-                case Mode.Today | Mode.Month:
+                case Mode.Today | Mode.Day | Mode.Month:
                     self._change_rwr(state.active_date, arguments[0])
                     return CommandHandlerResult(undoable=True)
                 case _:
                     return CommandHandlerResult(undoable=False, error=CommandErrorInvalidMode(self.command_name, mode=state.mode))
         elif date_count != 0 and argument_count == 0:
-            if invalid_date := find_first_not_fulfilling(dates, lambda date: date.is_month_date()):
+            if invalid_date := find_first_not_fulfilling(dates, lambda date: date.is_day_date() or date.is_month_date()):
                 return CommandHandlerResult(undoable=False, error=CommandErrorInvalidDate(self.command_name, received_date=invalid_date))
             for date in dates:
                 self._output_rwr(date.fill_with(state.active_date))
             return CommandHandlerResult(undoable=False)
         elif date_count != 0 and argument_count == 1:
-            if invalid_date := find_first_not_fulfilling(dates, lambda date: date.is_month_date()):
+            if invalid_date := find_first_not_fulfilling(dates, lambda date: date.is_day_date() or date.is_month_date()):
                 return CommandHandlerResult(undoable=False, error=CommandErrorInvalidDate(self.command_name, received_date=invalid_date))
             for date in dates:
                 self._change_rwr(date.fill_with(state.active_date), arguments[0])
