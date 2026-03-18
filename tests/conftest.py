@@ -46,9 +46,17 @@ from work_tracker.command.commands.undo import UndoHandler
 from work_tracker.command.commands.version import VersionHandler
 from work_tracker.command.commands.workday import WorkdayHandler
 from work_tracker.command.commands.zero import ZeroHandler
+from work_tracker.command.commands import __date as _date_module
+from work_tracker.command.commands import __time as _time_module
+from work_tracker.command.commands import __macro as _macro_module
 from work_tracker.command.common import CommandArgument
 from work_tracker.common import AppData, Date, Mode, ReadonlyAppState, classproperty
 from work_tracker.text.input_output_handler import InputOutputHandler
+
+
+_DateHandler = getattr(_date_module, "__DateHandler")
+_TimeHandler = getattr(_time_module, "__TimeHandler")
+_MacroHandler = getattr(_macro_module, "__MacroHandler")
 
 
 class TestInputOutput:
@@ -232,6 +240,30 @@ def random_dates(request) -> list[Date]:
         dates.append(date)
 
     return dates
+
+
+@pytest.fixture(scope="function")
+def internal_date_handler(mocker: MockerFixture):
+    return _DateHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def internal_time_handler(mocker: MockerFixture):
+    return _TimeHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def internal_macro_handler(mocker: MockerFixture):
+    return _MacroHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
 
 
 @pytest.fixture(scope="function")
@@ -520,5 +552,3 @@ def zero_handler(mocker: MockerFixture) -> ZeroHandler:
         work_data=sample_data(),
         io=mock_io(mocker)
     )
-
-
