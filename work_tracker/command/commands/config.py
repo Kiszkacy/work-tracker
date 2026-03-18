@@ -39,13 +39,19 @@ class ConfigHandler(CommandHandler):
         else: # argument_count > 2
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
 
-    def _get_config_value_via_dot_keys(self, value_path: str, use_clean_copy: bool) -> Any:
+    def _get_config_value_via_dot_keys(self, value_path: str, get_dict_structure: bool) -> Any:
         keys: list[str] = value_path.split(".")
-        dictionary: dict[str, Any] | Any = Config.data.model_dump() if use_clean_copy else Config.data
+        dictionary: dict[str, Any] | Any = Config.data.model_dump() if get_dict_structure else Config.data
         for key in keys:
-            if not isinstance(dictionary, BaseModel):
+            if not get_dict_structure and not isinstance(dictionary, BaseModel):
                 return None
-            dictionary = getattr(dictionary, key)
+            elif get_dict_structure and not isinstance(dictionary, dict):
+                return None
+            
+            if get_dict_structure:
+                dictionary = dictionary.get(key)
+            else:
+                dictionary = getattr(dictionary, key)
         return dictionary
 
     def _set_config_value_via_dot_keys(self, value_path: str, value: Any) -> bool:
