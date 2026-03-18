@@ -604,12 +604,12 @@ _global_command_templates: list[CommandTemplate] = [
             full_use_case_template="rwr [value]",
             short_help_description="Displays or modifies the remote work ratio",
             full_help_description=(
-                "Displays the current remote work ratio (RWR) for the given date."
+                " Displays the current remote work ratio (RWR) for the given date."
                 " If called with an argument it sets the remote work ratio to that value for the specified date allowing users to adjust their remote work percentage."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "rwr", "displays the current remote work ratio for the given date."),
-                CommandUseCaseDescription(set(Mode), "rwr <value>", "sets the remote work ratio to the specified value for the given date."),
+                CommandUseCaseDescription(set(Mode), "rwr <value>", "sets the remote work ratio to the specified value for the given date's month."),
             ],
         ),
         supported_modes=set(Mode),
