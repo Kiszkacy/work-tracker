@@ -112,8 +112,8 @@ class MainConfig(BaseModel):
         raw_data["input"]["date"]["multi_end_symbol"] = raw_data.pop("multi_end_symbol", ")")
         raw_data["input"]["date"]["normalize"] = raw_data.pop("normalize", False)
         raw_data["input"].setdefault("time", {})
-        raw_data["input"]["add_prefix"] = raw_data.pop("add_prefix", "+")
-        raw_data["input"]["subtract_prefix"] = raw_data.pop("subtract_prefix", "-")
+        raw_data["input"]["time"]["add_prefix"] = raw_data.pop("add_prefix", "+")
+        raw_data["input"]["time"]["subtract_prefix"] = raw_data.pop("subtract_prefix", "-")
 
         raw_data["command"]["calendar"]["absence_background_color"] = raw_data["command"]["calendar"].get("absence_background_color", None)
         raw_data["command"]["calendar"]["absence_foreground_color"] = raw_data["command"]["calendar"].get("absence_foreground_color", "brightblue")
