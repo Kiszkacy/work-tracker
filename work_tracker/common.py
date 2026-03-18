@@ -483,6 +483,8 @@ class AppData:
                 delattr(month_data, 'target_office_days')
             if hasattr(month_data, 'target_remote_days'):
                 delattr(month_data, 'target_remote_days')
+        
+        self._version = 2
 
     def update_data_to_latest_version(self):
         # if loading a very old version run each updater in order A -> A+1 -> A+2 -> A+3 -> ... B

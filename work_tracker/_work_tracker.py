@@ -74,6 +74,7 @@ class WorkTracker:
                 self._first_time_prompt()
             elif not self.data.is_latest_data_version():
                 self.data.update_data_to_latest_version()
+                CheckpointManager.save("update", self.data, add_suffix_timestamp=True)
 
         self._initialize_command_handler()
         self._clear_old_cache()
