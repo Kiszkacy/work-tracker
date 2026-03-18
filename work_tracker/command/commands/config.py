@@ -1,3 +1,5 @@
+from typing import Any
+
 import yaml
 from pydantic import BaseModel
 
@@ -12,7 +14,7 @@ from work_tracker.text.common import Color
 class ConfigHandler(CommandHandler):
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
-            yamllike_text: str = yaml.dump(Config.data.dict(), default_flow_style=False, sort_keys=False)
+            yamllike_text: str = yaml.dump(Config.data.model_dump(), default_flow_style=False, sort_keys=False)
             text_with_lines: list[str] = []
             for line in yamllike_text.splitlines():
                 text_with_lines.append(f"| {line}")
@@ -20,7 +22,7 @@ class ConfigHandler(CommandHandler):
             self.io.output("\n".join(text_with_lines))
             return CommandHandlerResult(undoable=False)
         elif date_count == 0 and argument_count == 1:
-            value: any = self._get_printable_nested_config_value(arguments[0])
+            value: Any = self._get_printable_nested_config_value(arguments[0])
             if value is None:
                 self.io.output(f"The field {Color.Brightblue.value}{arguments[0]}{Color.Reset.value} could not be found in the config.")
             else:
@@ -37,16 +39,22 @@ class ConfigHandler(CommandHandler):
         else: # argument_count > 2
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
 
-    def _get_config_value_via_dot_keys(self, value_path: str, use_clean_copy: bool) -> any:
+    def _get_config_value_via_dot_keys(self, value_path: str, get_dict_structure: bool) -> Any:
         keys: list[str] = value_path.split(".")
-        dictionary: dict[str, any] | any = Config.data.dict() if use_clean_copy else Config.data
+        dictionary: dict[str, Any] | Any = Config.data.model_dump() if get_dict_structure else Config.data
         for key in keys:
-            if not isinstance(dictionary, BaseModel):
+            if not get_dict_structure and not isinstance(dictionary, BaseModel):
                 return None
-            dictionary = getattr(dictionary, key)
+            elif get_dict_structure and not isinstance(dictionary, dict):
+                return None
+            
+            if get_dict_structure:
+                dictionary = dictionary.get(key)
+            else:
+                dictionary = getattr(dictionary, key)
         return dictionary
 
-    def _set_config_value_via_dot_keys(self, value_path: str, value: any) -> bool:
+    def _set_config_value_via_dot_keys(self, value_path: str, value: Any) -> bool:
         keys: list[str] = value_path.split(".")
         keys_before_last, last_key = keys[:-1], keys[-1]
         if last_key == "version":
@@ -55,29 +63,29 @@ class ConfigHandler(CommandHandler):
 
         dictionary: BaseModel | None = self._get_config_value_via_dot_keys(".".join(keys_before_last), False)
         if dictionary is None:
-            self.io.output(f"Could not find the specified field {Color.Brightred.value}{value_path}{Color.Reset.value}. Ensure that the path is correct.")
+            self.io.output(f"Could not find the specified field {Color.from_key(Config.data.output.error_color).value}{value_path}{Color.Reset.value}. Ensure that the path is correct.")
             return False
         elif not isinstance(dictionary, BaseModel):
-            self.io.output(f"The field {Color.Brightred.value}{value_path}{Color.Reset.value} could not be found in the config.")
+            self.io.output(f"The field {Color.from_key(Config.data.output.error_color).value}{value_path}{Color.Reset.value} could not be found in the config.")
             return False
         elif getattr(dictionary, last_key) is None:
-            self.io.output(f"The field {Color.Brightred.value}{value_path}{Color.Reset.value} could not be found in the config.")
+            self.io.output(f"The field {Color.from_key(Config.data.output.error_color).value}{value_path}{Color.Reset.value} could not be found in the config.")
             return False
         elif isinstance(getattr(dictionary, last_key), BaseModel):
-            self.io.output(f"The field {Color.Brightred.value}{value_path}{Color.Reset.value} is not a changeable config field.")
+            self.io.output(f"The field {Color.from_key(Config.data.output.error_color).value}{value_path}{Color.Reset.value} is not a changeable config field.")
             return False
 
         expected_type: type = type(getattr(dictionary, last_key)) # TODO this wont work if field can be assigned multiple types
         if not isinstance(value, expected_type):
-            self.io.output(f"Invalid type of value to change field {Color.Brightred.value}{last_key}{Color.Reset.value}.")
+            self.io.output(f"Invalid type of value to change field {Color.from_key(Config.data.output.error_color).value}{last_key}{Color.Reset.value}.")
             return False
 
         setattr(dictionary, last_key, value)
         Config.save()
         return True
 
-    def _get_printable_nested_config_value(self, value_path: str) -> any:
-        value: any = self._get_config_value_via_dot_keys(value_path, True)
+    def _get_printable_nested_config_value(self, value_path: str) -> Any:
+        value: Any = self._get_config_value_via_dot_keys(value_path, True)
         if value is None:
             return None
 

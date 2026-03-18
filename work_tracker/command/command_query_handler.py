@@ -50,17 +50,22 @@ class CommandQueryHandler:
 
     def run(self, query: CommandQuery):
         result: CommandHandlerResult = self._handlers[query.command.name].handle(query.dates, query.date_count, query.arguments, query.argument_count, self._readonly_app_state())
-
         if result.execute_after is not None:
             self._during_execute_after = True
-            for query in result.execute_after:
-                self.run(query)
+            for subquery in result.execute_after:
+                self.run(subquery)
             self._during_execute_after = False
 
         if result.undoable and not self._during_execute_after:
-            self._history.add(KeyManager.encode(self.data), query.raw_text)
+            multi_dates_text: str = \
+                (Config.data.input.date.multi_start_symbol
+                 + query.raw_full_input.split(Config.data.input.date.multi_start_symbol)[1].split(Config.data.input.date.multi_end_symbol)[0]
+                 + Config.data.input.date.multi_end_symbol + " ") \
+                if query.multi_dates_count != 0 and query.order_index != 0 \
+                else ''
+            self._history.add(KeyManager.encode(self.data), f"{multi_dates_text}{query.raw_text}")
         if result.error is not None:
-            self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.Brightred)
+            self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.from_key(Config.data.output.error_color))
         if result.change_active_date is not None:
             self.state.active_date = result.change_active_date
             if self.state.active_date == Date.today():

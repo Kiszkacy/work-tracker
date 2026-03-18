@@ -15,7 +15,3 @@ class VersionHandler(CommandHandler):
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidDateCount(self.command_name, received_date_count=date_count, expected_date_count=0))
         else: # argument_count != 0
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
-
-    def _handle_day(self, date: Date):
-        filled_date: Date = date.fill_with_today().to_day_date()
-        self.data.day[filled_date].is_a_work_day = True

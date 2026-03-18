@@ -1,15 +1,18 @@
+from dataclasses import replace
+from typing import Any
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.command_parser import CommandParser
-from work_tracker.command.common import CommandArgument, ParseResult, CommandQuery
+from work_tracker.command.common import CommandArgument, ParseResult, CommandQuery, TimeArgument, TimeArgumentType
 from work_tracker.command.macro_manager import MacroManager, MacroTemplate
 from work_tracker.common import Date, ReadonlyAppState
+from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorCustom
 
 
 class __MacroHandler(CommandHandler):
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if argument_count == 0:
-            print(arguments)
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
 
         macro_identifier: str = arguments[0]
@@ -23,24 +26,44 @@ class __MacroHandler(CommandHandler):
                 )
             )
 
-        given_arguments: list[any] = arguments[1:]
-        required_argument_count: int = len([argument for argument in macro.default_argument_values if argument is None])
-        if len(given_arguments) < required_argument_count:
+        given_arguments: list[Any] = arguments[1:]
+        given_argument_count: int = len(given_arguments)
+
+        max_accepted_argument_count: int = len(macro.default_argument_values)
+        min_required_argument_count: int = len([argument for argument in macro.default_argument_values if argument is None])
+
+        # TODO: really dont like using nested methods, but this is a quick fix
+        def plural_argument(count: int) -> str: return "argument" if count == 1 else "arguments"
+        def plural_be(count: int) -> str: return "was" if count == 1 else "were"
+
+        if given_argument_count > max_accepted_argument_count:
+            if max_accepted_argument_count == 0:
+                message = f"macro {macro_identifier} expects no arguments, but {given_argument_count} {plural_be(given_argument_count)} provided."
+            else:
+                message = f"macro {macro_identifier} expects at most {max_accepted_argument_count} {plural_argument(max_accepted_argument_count)}, but {given_argument_count} {plural_be(given_argument_count)} provided."
+
             return CommandHandlerResult(
                 undoable=False,
-                error=CommandErrorCustom(
-                    command_name=self.command_name,
-                    custom_message=f"macro {macro_identifier} requires {required_argument_count} arguments but only {len(given_arguments)} values were provided. Please provide the missing arguments."
-                )
+                error=CommandErrorCustom(command_name=self.command_name, custom_message=message)
+            )
+        elif given_argument_count < min_required_argument_count:
+            if given_argument_count == 0:
+                message = f"macro {macro_identifier} requires at least {min_required_argument_count} {plural_argument(min_required_argument_count)}, but no arguments were provided."
+            else:
+                message = f"macro {macro_identifier} requires at least {min_required_argument_count} {plural_argument(min_required_argument_count)}, but only {given_argument_count} {plural_be(given_argument_count)} provided."
+
+            return CommandHandlerResult(
+                undoable=False,
+                error=CommandErrorCustom(command_name=self.command_name, custom_message=message)
             )
 
-        macro_arguments: list[any] = macro.default_argument_values
-        macro_arguments[:len(given_arguments)] = given_arguments
+        macro_arguments: list[str] = macro.default_argument_values.copy()
+        macro_arguments[:len(given_arguments)] = [self._format_argument(argument) for argument in given_arguments]
         command_text: str = macro.command_text
         for index, argument_identifier in enumerate(macro.arguments):
             command_text = command_text.replace(f"<{argument_identifier}>", macro_arguments[index])
 
-        interpret_result: ParseResult = CommandParser.parse(command_text)
+        interpret_result: ParseResult = CommandParser.parse(command_text, state)
         if interpret_result.error is not None:
             return CommandHandlerResult(
                 undoable=False,
@@ -51,4 +74,18 @@ class __MacroHandler(CommandHandler):
             )
 
         queries: list[CommandQuery] = interpret_result.queries
+        for index, query in enumerate(queries): # TODO: this is quite ugly, but works
+            new_dates: list[Date] = Date.normalize_dates(query.dates + dates, preserve_order=True) if Config.data.input.date.normalize else query.dates + dates
+            queries[index] = replace(query, dates=new_dates, date_count=new_dates.__len__())
         return CommandHandlerResult(undoable=True, execute_after=queries)
+
+    @staticmethod
+    def _format_argument(argument: CommandArgument) -> str:
+        if isinstance(argument, TimeArgument):
+            if argument.type == TimeArgumentType.Add:
+                return f"{Config.data.input.time.add_prefix}{argument.minutes}m"
+            elif argument.type == TimeArgumentType.Subtract:
+                return f"{Config.data.input.time.subtract_prefix}{argument.minutes}m"
+            else:
+                return f"{argument.minutes}m"
+        return str(argument)

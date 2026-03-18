@@ -1,6 +1,6 @@
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument
-from work_tracker.common import Date, ReadonlyAppState, Mode, find_first_not_fulfilling
+from work_tracker.common import Date, WorkLocation, ReadonlyAppState, Mode, find_first_not_fulfilling
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode, CommandErrorInvalidDateCount
 from work_tracker.text.common import Color
 
@@ -52,8 +52,8 @@ class StatusHandler(CommandHandler):
 
     def _handle_month(self, date: Date):
         date = date.fill_with_today().to_day_date()
-        minutes_at_work_office: int = sum([self.data.day[day].minutes_at_work for day in date.days_in_a_month() if self.data.day[day].office_work])
-        minutes_at_work_remote: int = sum([self.data.day[day].minutes_at_work for day in date.days_in_a_month() if self.data.day[day].remote_work])
+        minutes_at_work_office: int = sum([self.data.day[day].minutes_at_work for day in date.days_in_a_month() if self.data.day[day].work_location == WorkLocation.OFFICE])
+        minutes_at_work_remote: int = sum([self.data.day[day].minutes_at_work for day in date.days_in_a_month() if self.data.day[day].work_location == WorkLocation.REMOTE])
         month: Date = date.to_month_date()
         target_minutes_total: int = self.data.month[month].target_minutes
         target_minutes_office: int = int(target_minutes_total * (1.0 - self.data.month[month].remote_work_ratio))

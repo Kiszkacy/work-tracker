@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import difflib
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import dataclass
+from types import UnionType
+from typing import get_args
 
 from work_tracker.command.command_manager import CommandManager
 from work_tracker.command.common import Command
@@ -94,7 +96,6 @@ class CommandErrorInvalidMode(CommandError):
 
 @dataclass(frozen=True)
 class CommandErrorNotImplemented(CommandError):
-
     @property
     def message(self) -> str:
         return f"command '{self.command_name}' is not yet implemented."
@@ -126,7 +127,14 @@ class ParserError(ABC):
 class ParserErrorMultipleDates(ParserError):
     @property
     def message(self) -> str:
-        return f"multiple dates were provided without any command. To change the active date, provide only one."
+        return "multiple dates were provided without any command. To change the active date, provide only one."
+
+
+@dataclass(frozen=True)
+class ParserErrorMultipleDatesInvalidSyntax(ParserError):
+    @property
+    def message(self) -> str:
+        return "multiple dates require corresponding opening and closing symbol at the start and end of list of dates."
 
 
 @dataclass(frozen=True)
@@ -156,12 +164,20 @@ class ParserErrorInvalidArgumentTypes(ParserError):
 
         return f"invalid argument types, received {self._format_type_list(self.received_types)} while command '{self.command.name}' expects {formatted_types}."
 
-    @staticmethod
-    def _format_type_list(types: list[type]) -> str:
-        if len(types) == 1:
-            return types[0].__name__
-        else:
-            return f"({', '.join(type_.__name__ for type_ in types)})"
+    @classmethod
+    def _get_name_from_type(cls, type_: type) -> str:
+        if isinstance(type_, UnionType):
+            return " | ".join(cls._get_name_from_type(arg) for arg in get_args(type_))
+
+        return type_.__name__
+
+    @classmethod
+    def _format_type_list(cls, types: list[type]) -> str:
+        names = [cls._get_name_from_type(type_) for type_ in types]
+        if len(names) == 1:
+            return names[0]
+
+        return f"({', '.join(names)})"
 
 
 @dataclass(frozen=True)

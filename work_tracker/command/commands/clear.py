@@ -1,6 +1,7 @@
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument
-from work_tracker.common import Date, ReadonlyAppState, Mode, find_first_not_fulfilling
+from work_tracker.common import Date, ReadonlyAppState, Mode, find_first_not_fulfilling, DayType
+from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode
 
 
@@ -30,13 +31,19 @@ class ClearHandler(CommandHandler):
 
     def _handle_day(self, date: Date):
         date = date.fill_with_today().to_day_date()
-        self.data.day[date].reset(is_a_work_day=self.data.calendar.is_working_day(date.to_datetime()))
+        if self.data.calendar.is_working_day(date.to_datetime()):
+            day_type = DayType.WORKDAY
+        elif self.data.calendar.is_holiday(date.to_datetime()):
+            day_type = DayType.HOLIDAY
+        else:
+            day_type = DayType.WEEKEND
+        self.data.day[date].reset(day_type=day_type)
 
     def _handle_month(self, date: Date):
         date = date.fill_with_today().to_month_date()
         for day in date.days_in_a_month():
-            self.data.day[day].reset(is_a_work_day=self.data.calendar.is_working_day(day.to_datetime()))
-        self.data.month[date].fte = self.data.setup.default_fte
-        self.data.month[date].remote_work_ratio = self.data.setup.default_remote_work_ratio
-        new_target_minutes_total: int = sum([480 * self.data.month[date].fte if self.data.day[day].is_a_work_day else 0 for day in date.days_in_a_month()])
+            self._handle_day(day)
+        self.data.month[date].fte = Config.data.command.fte.default_value
+        self.data.month[date].remote_work_ratio = Config.data.command.rwr.default_value
+        new_target_minutes_total: int = sum([480 * self.data.month[date].fte if self.data.day[day].day_type == DayType.WORKDAY else 0 for day in date.days_in_a_month()])
         self.data.month[date].target_minutes = new_target_minutes_total

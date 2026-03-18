@@ -7,6 +7,7 @@ import sys
 import traceback
 from pathlib import Path
 
+from packaging.version import parse as parse_version
 from workalendar.registry import registry
 
 from work_tracker import __version__
@@ -32,6 +33,7 @@ class WorkTracker:
     def initialize(self, check_is_new_version_available: bool = True):
         self._initialized = True
 
+        previously_installed_version: str | None = self._get_previously_installed_version()
         if is_first_time_launch := self._is_first_time_launch():
             self._create_basic_files()
         if was_version_file_missing := self._is_version_file_missing():
@@ -40,6 +42,8 @@ class WorkTracker:
             self._create_default_config_file()
         if was_macros_file_missing := self._is_macros_file_missing():
             self._create_default_macros_file()
+        if was_aliases_file_missing := self._is_aliases_file_missing():
+            self._create_default_aliases_file()
         if was_updated_since_last_launch := self._was_updated_since_last_launch():
             self._update_version_file()
 
@@ -57,6 +61,11 @@ class WorkTracker:
                 self.io.output("WARNING: config file could not be found. Default config will be used instead.", color=Color.Yellow)
             if was_macros_file_missing:
                 self.io.output("WARNING: macros file could not be found. Default macros will be used instead.", color=Color.Yellow)
+            if was_aliases_file_missing:
+                if was_updated_since_last_launch and previously_installed_version is not None and parse_version(previously_installed_version) < parse_version("0.2.0"):
+                    self.io.output("UPDATE: creating default aliases file due to version update.", color=Color.Brightblue)
+                else:
+                    self.io.output("WARNING: aliases file could not be found. Default aliases will be used instead.", color=Color.Yellow)
 
         if not is_first_time_launch:
             self._load_data()
@@ -65,27 +74,43 @@ class WorkTracker:
                 self._first_time_prompt()
             elif not self.data.is_latest_data_version():
                 self.data.update_data_to_latest_version()
+                CheckpointManager.save("update", self.data, add_suffix_timestamp=True)
 
         self._initialize_command_handler()
         self._clear_old_cache()
 
         if not was_updated_since_last_launch and check_is_new_version_available and (latest_version := self._is_new_version_available()) is not None:
-            self._display_new_version_available_message(latest_version)
+            if parse_version(latest_version) > parse_version(__version__):
+                self._display_new_version_available_message(latest_version)
+            elif parse_version(latest_version) < parse_version(__version__):
+                self._display_running_newer_version_message(latest_version)
         self.io.output(f"Using {Color.Brightblue.value}WorkTracker{Color.Clear.value} version {Color.Brightblue.value}{__version__}{Color.Clear.value}.")
 
+    def _get_previously_installed_version(self) -> str | None:
+        version_path: Path = get_data_path().joinpath("version")
+        if not version_path.exists():
+            return None
+
+        with open(version_path, "r") as file:
+            return file.read()
+
     def _is_first_time_launch(self) -> bool:
-        expected_files: list[Path] = [get_data_path().joinpath("version"), get_data_path().joinpath("config.yaml"), get_data_path().joinpath("macros.txt")]
+        expected_files: list[Path] = [get_data_path().joinpath("version"), get_data_path().joinpath("config.yaml"), get_data_path().joinpath("macros.txt"), get_data_path().joinpath("aliases.txt")]
         return all(not path.exists() for path in expected_files)
 
     def _create_basic_files(self):
         self._create_default_config_file()
         self._create_default_macros_file()
+        self._create_default_aliases_file()
 
     def _create_default_config_file(self):
         shutil.copy(Path(__file__).parent.joinpath("data/default.config.yaml"), get_data_path().joinpath("config.yaml"))
 
     def _create_default_macros_file(self):
         shutil.copy(Path(__file__).parent.joinpath("data/default.macros.txt"), get_data_path().joinpath("macros.txt"))
+
+    def _create_default_aliases_file(self):
+        shutil.copy(Path(__file__).parent.joinpath("data/default.aliases.txt"), get_data_path().joinpath("aliases.txt"))
 
     def _initialize_io(self):
         self.io = InputOutputHandler()
@@ -105,19 +130,12 @@ class WorkTracker:
             if country_code in valid_codes: # TODO use of private method
                 break
             else:
-                self.io.output("Invalid country code. Please input valid contry code.", color=Color.Brightred)
-
-        self.io.output("Would you like to run the initial setup? This process can take some time but is recommended, as it enables the app to automatically fill your calendar with the suggested work schedule.")
-        user_input: str = self.io.input(f"{Config.data.input.prefix} ", custom_autocomplete=["yes", "no"])
-        if "yes".startswith(user_input):
-            self.io.output("Setup command is not yet implemented. Skipping setup phase...", color=Color.Brightred)
-        else:
-            self.io.output(f"Initial setup skipped. You can always run setup later by using {Color.Brightblue.value}setup{Color.Reset.value} command.")
+                self.io.output("Invalid country code. Please input valid contry code.", color=Color.from_key(Config.data.output.error_color))
 
         self.data = AppData(country_code=country_code)
-        CheckpointManager.save("initial", self.data)
+        CheckpointManager.save("initial", self.data, add_suffix_timestamp=True)
 
-        self.io.write(f"Everything is set up and ready.", color=Color.Cyan, end=" ")
+        self.io.write("Everything is set up and ready.", color=Color.Cyan, end=" ")
         self.io.write(f"To view a list of available commands type {Color.Brightblue.value}help{Color.Reset.value}.", end=" ")
         self.io.write(f"For detailed information about a specific command use {Color.Brightblue.value}help <command_name>{Color.Reset.value}.", end=" ")
         self.io.write(f"It is recommended that you use {Color.Brightblue.value}tutorial{Color.Reset.value} command to quickly get familiar with the available features.", end=" ")
@@ -131,6 +149,9 @@ class WorkTracker:
 
     def _is_macros_file_missing(self) -> bool:
         return not get_data_path().joinpath("macros.txt").exists() # TODO make file name a constant
+
+    def _is_aliases_file_missing(self) -> bool:
+        return not get_data_path().joinpath("aliases.txt").exists() # TODO make file name a constant
 
     def _was_updated_since_last_launch(self) -> bool:
         path: Path = get_data_path().joinpath("version")
@@ -162,7 +183,7 @@ class WorkTracker:
 
             latest_version: str = result.stdout.strip().split("\n")[-1].split()[-1]
             return latest_version if installed_version != latest_version else None
-        except subprocess.SubprocessError as e:
+        except subprocess.SubprocessError:
             raise VersionCheckError("Subprocess error during version check.")
         except Exception as e:
             raise VersionCheckError(f"Unexpected error: {e}")
@@ -171,11 +192,14 @@ class WorkTracker:
         self.io.write(f"New version {Color.Brightcyan.value}{version}{Color.Reset.value} is available!", end=" ")
         self.io.output(f"Update with {Color.Brightblue.value}pip install --upgrade work-tracker{Color.Reset.value}.")
 
+    def _display_running_newer_version_message(self, latest_version_on_pip: str):
+        self.io.output(f"It seems like you are running a newer version ({Color.Brightblue.value}{__version__}{Color.Reset.value}) than the one available on pip ({Color.Brightblue.value}{latest_version_on_pip}{Color.Reset.value}). This may be the case if you are running a development version or if there was an issue retrieving the latest version from pip. {Color.Brightred.value}If you think this is an error, please report it{Color.Reset.value}.")
+
     def _clear_old_cache(self):
         CheckpointManager.clear_cache()
 
     def _at_crash_exit(self, crash_message: str | None = None, exception: Exception | None = None):
-        CheckpointManager.save(f"crash-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}", self.data)
+        CheckpointManager.save("crash", self.data, add_suffix_timestamp=True)
         with open(get_data_path().joinpath(f"crash-log-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"), "w") as file:
             if crash_message is not None:
                 file.write(crash_message)
@@ -184,11 +208,11 @@ class WorkTracker:
         sys.exit()
 
     def _at_exit(self):
-        CheckpointManager.save(f"{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}", self.data)
+        CheckpointManager.save("exit", self.data, add_suffix_timestamp=True)
         sys.exit()
 
     def handle_exit_signal(self): # TODO check if this works | no it doesnt :(
-        self._at_crash_exit(crash_message=f"received exit signal")
+        self._at_crash_exit(crash_message="received exit signal")
 
     def _run(self):
         error_log_last_processed_input: str = "None"
@@ -208,18 +232,18 @@ class WorkTracker:
                 user_input: str = self.get_user_input(prefix)
                 error_log_last_processed_input = user_input
 
-                result: ParseResult = CommandParser.parse(user_input)
+                result: ParseResult = CommandParser.parse(user_input, self.state)
                 if result.error:
-                    self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.Brightred)
+                    self.io.output(f"ERROR: {result.error.message or 'missing error description'}", color=Color.from_key(Config.data.output.error_color))
                     continue
 
                 for query in result.queries:
                     self.command_handler.run(query)
         except KeyboardInterrupt:
-            self.io.output("UNSAFE EXIT: saving data...", color=Color.Brightred, end="")
+            self.io.output("UNSAFE EXIT: saving data...", color=Color.from_key(Config.data.output.error_color), end="")
             self._at_exit()
         except Exception as exception:
-            self.io.output("FATAL ERROR: saving data and creating error log...", color=Color.Brightred, end="")
+            self.io.output("FATAL ERROR: saving data and creating error log...", color=Color.from_key(Config.data.output.error_color), end="")
             self._at_crash_exit(crash_message=f"{error_log_last_processed_input}\n\n", exception=exception)
 
     def start(self):

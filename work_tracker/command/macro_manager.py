@@ -11,7 +11,7 @@ class MacroTemplate:
     raw: str
     command_text: str
     arguments: list[str]
-    default_argument_values: list[str]
+    default_argument_values: list[str|None]
 
 
 __macro_version__: int = 1
@@ -76,12 +76,12 @@ class MacroManager:
                 if not all(re.match(r"^<[^<>]+>$", argument) for argument in arguments):
                     raise Exception() # TODO
 
-                default_values: list[any] = []
+                default_values: list[str|None] = []
                 parsed_arguments: list[str] = []
                 for argument in arguments:
                     if "=" in argument:
                         name, value = argument[1:-1].split("=", 1)
-                        default_values.append(value)
+                        default_values.append('') if value.lower() == "null" else default_values.append(value)
                         parsed_arguments.append(f"{name}")
                     else:
                         default_values.append(None)

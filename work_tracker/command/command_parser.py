@@ -3,20 +3,15 @@ import re
 from fractions import Fraction
 from typing import get_origin, get_args
 
+from work_tracker.command.alias_manager import AliasManager
 from work_tracker.command.command_manager import CommandManager
 from work_tracker.command.command_text_parser import CommandTextParser
 from work_tracker.command.common import Command, CommandQuery, Date, CommandArgument, TimeArgument, TimeArgumentType, ParseResult, Number, AdditionalInputArgument
-from work_tracker.error import ParserError, ParserErrorMultipleDates, ParserErrorInvalidArgumentCount, ParserErrorInvalidArgumentTypes, ParserErrorUnknownCommand
+from work_tracker.command.keyword_manager import KeywordManager
+from work_tracker.error import ParserError, ParserErrorMultipleDates, ParserErrorInvalidArgumentCount, ParserErrorInvalidArgumentTypes, ParserErrorUnknownCommand, ParserErrorMultipleDatesInvalidSyntax
 from work_tracker.command.macro_manager import MacroManager
-from work_tracker.common import month_map
+from work_tracker.common import ReadonlyAppState, month_map
 from work_tracker.config import Config
-
-
-# TODO move to config
-multi_command_dates_start_string: str = "("
-multi_command_dates_end_string: str = ")"
-time_argument_add_prefix_string: str = "+"
-time_argument_subtract_prefix_string: str = "-"
 
 
 class CommandParser:
@@ -27,8 +22,11 @@ class CommandParser:
     _time_pattern: str = r'^\d+:\d{2}$' # e.g. 1:20, 2:30
 
     @classmethod
-    def parse(cls, text: str) -> ParseResult:
+    def parse(cls, text: str, state: ReadonlyAppState) -> ParseResult:
+        original_text: str = text
         text = re.sub(r"\s+", " ", text)
+        text = cls.expand_aliases(text)
+        text = cls.activate_keywords(text, state)
         text_per_command: list[str] = cls._split_text_per_command(text)
         queries: list[CommandQuery] = []
         error: ParserError | None = None
@@ -36,25 +34,21 @@ class CommandParser:
         multi_dates: list[Date] = []
         for index, text in enumerate(text_per_command):
             parser: CommandTextParser = CommandTextParser(text)
-            dates: list[Date] = []
             if parser.peak() is None:
                 continue
             
             is_first_command_in_chain: bool = index == 0
             if is_first_command_in_chain and cls._has_multi_command_dates(parser):
-                multi_dates = cls._get_multi_command_dates(parser) # TODO fix, this does not check if the multi_end_string is required so input '(<date> <date>...' is valid
+                multi_dates = cls._get_multi_command_dates(parser)
+                if len(multi_dates) == 0:
+                    error = ParserErrorMultipleDatesInvalidSyntax()
+                    break
 
             predefined_command_arguments: list[CommandArgument] = []
+            dates: list[Date] = cls._get_dates(parser)
             command: Command = None
-            if (time := cls._get_time(parser)) is not None:
-                command = CommandManager.time_command
-                predefined_command_arguments.append(time)
-            else:
-                dates = cls._get_dates(parser)
 
-            if command is not None:
-                pass
-            elif parser.peak() is not None and (time := cls._get_time(parser)) is not None:
+            if parser.peak() is not None and (time := cls._get_time(parser)) is not None:
                 command: Command = CommandManager.time_command
                 predefined_command_arguments.append(time)
             elif parser.peak() is None and len(dates) == 1:
@@ -62,15 +56,13 @@ class CommandParser:
             elif parser.peak() is None and len(dates) > 1: # situation where only dates are provided
                 error = ParserErrorMultipleDates()
                 break
-            elif parser.peak() in MacroManager.macros: # TODO macro
+            elif parser.peak() in MacroManager.macros:
                 command: Command = CommandManager.macro_execute_command
                 predefined_command_arguments.append(parser.next())
             else:
                 command_string: str = parser.next()
                 is_valid_command_string: bool = cls._is_valid_command_string(command_string)
-                if not is_valid_command_string and len(dates) == 1: # this is here to properly catch errors further ahead when reading arguments
-                    command: Command = CommandManager.date_command
-                elif not is_valid_command_string:
+                if not is_valid_command_string:
                     error = ParserErrorUnknownCommand(
                         received_name=command_string
                     )
@@ -95,20 +87,77 @@ class CommandParser:
                 )
                 break
 
-            final_dates: list[Date] = Date.normalize_dates(multi_dates + dates, preserve_order=True) # TODO allow user to turn off normalization
+            final_dates: list[Date] = Date.normalize_dates(multi_dates + dates, preserve_order=True) if Config.data.input.date.normalize else (multi_dates + dates)
             queries.append(CommandQuery(
                 command=command,
                 dates=final_dates,
                 date_count=len(final_dates),
+                own_dates=dates,
+                own_date_count=len(dates),
+                multi_dates=multi_dates,
+                multi_dates_count=len(multi_dates),
                 arguments=command_arguments,
                 argument_count=len(command_arguments),
-                raw_text=text
+                raw_text=text,
+                raw_full_input=original_text,
+                order_index=index
             ))
 
         return ParseResult(
             queries=queries,
             error=error,
         )
+    
+    @classmethod
+    def expand_aliases(cls, text: str, max_depth: int = 32) -> str:
+        token_pattern: re.Pattern = re.compile(r'("[^"]*"|\'[^\']*\'|\S+)') # respect text inside quotes, dont expand aliases inside
+
+        for _ in range(max_depth):
+            tokens: list[str] = token_pattern.findall(text)
+            if not tokens:
+                break
+
+            changed: bool = False
+            result: list[str] = []
+            for token in tokens:
+                is_quoted: bool = (token.startswith('"') and token.endswith('"')) or \
+                                  (token.startswith("'") and token.endswith("'"))
+
+                if not is_quoted and token.lower() in AliasManager.aliases:
+                    replacement_text: str = AliasManager.aliases[token.lower()].replacement_text
+                    result.extend(replacement_text.split())
+                    changed = True
+                else:
+                    result.append(token)
+
+            if not changed:
+                break
+
+            text = " ".join(result)
+
+        return text
+    
+    @classmethod
+    def activate_keywords(cls, text: str, state: ReadonlyAppState) -> str:
+        prefix: str = Config.data.input.keyword_prefix
+        
+        token_pattern: re.Pattern = re.compile(r'("[^"]*"|\'[^\']*\'|\S+)')
+        tokens: list[str] = token_pattern.findall(text)
+        
+        for token in tokens:
+            is_quoted: bool = (token.startswith('"') and token.endswith('"')) or \
+                              (token.startswith("'") and token.endswith("'"))
+            if is_quoted:
+                continue
+            
+            if token.startswith(prefix):
+                keyword_without_prefix: str = token[len(prefix):]
+                if keyword_without_prefix.lower() in KeywordManager.keywords:
+                    value: str = KeywordManager.get_keyword_value(keyword_without_prefix, state)
+                    if value:
+                        text = text.replace(token, value)
+        
+        return text
 
     @classmethod
     def _split_text_per_command(cls, text: str) -> list[str]: # TODO add tests
@@ -123,28 +172,35 @@ class CommandParser:
 
     @classmethod
     def _has_multi_command_dates(cls, parser: CommandTextParser) -> bool:
-        return parser.peak().startswith(multi_command_dates_start_string)
+        return parser.peak().startswith(Config.data.input.date.multi_start_symbol)
 
     @classmethod
     def _get_multi_command_dates(cls, parser: CommandTextParser) -> list[Date]:
-        if parser.peak() == multi_command_dates_start_string:
-            parser.next()
-        return cls._get_dates(parser, multi_command_dates=True)
+        return cls._get_dates(parser, require_multi_command_date_symbols=True)
 
     @classmethod
-    def _get_dates(cls, parser: CommandTextParser, multi_command_dates: bool = False) -> list[Date]:
+    def _get_dates(cls, parser: CommandTextParser, require_multi_command_date_symbols: bool = False) -> list[Date]:
         parsed_dates: list[Date] = []
         force_break: bool = False
         first_word: bool = True
-        while word := parser.peak(): # TODO split the 'multi_command_dates_end_string' logic into _get_multi_command_dates ?
-            if multi_command_dates and first_word and word != multi_command_dates_start_string and word.startswith(multi_command_dates_start_string):
-                word = word[len(multi_command_dates_start_string):]
+        seen_multi_date_end_symbol: bool = False
+        while word := parser.peak(): # TODO split the 'Config.data.input.date.multi_end_symbol' logic into _get_multi_command_dates ?
+            if require_multi_command_date_symbols and first_word:
                 first_word = False
-            if multi_command_dates and word == multi_command_dates_end_string:
+                if word == Config.data.input.date.multi_start_symbol:
+                    parser.next()
+                    continue
+                elif word.startswith(Config.data.input.date.multi_start_symbol):
+                    word = word[len(Config.data.input.date.multi_start_symbol):]
+                else:
+                    break
+            elif require_multi_command_date_symbols and word == Config.data.input.date.multi_end_symbol:
+                seen_multi_date_end_symbol = True
                 parser.next()
                 break
-            if multi_command_dates and word.endswith(multi_command_dates_end_string):
-                word = word[:-len(multi_command_dates_end_string)]
+            elif require_multi_command_date_symbols and word.endswith(Config.data.input.date.multi_end_symbol):
+                seen_multi_date_end_symbol = True
+                word = word[:-len(Config.data.input.date.multi_end_symbol)]
                 force_break = True
             
             date: Date | None = cls._extract_date(word)
@@ -157,7 +213,10 @@ class CommandParser:
             if force_break:
                 break
 
-        return Date.normalize_dates(parsed_dates, preserve_order=True) # TODO normalize too aggressive in some cases, allow user to turn it off ?
+        if require_multi_command_date_symbols and not seen_multi_date_end_symbol:
+            return []
+        else:
+            return Date.normalize_dates(parsed_dates, preserve_order=True) if Config.data.input.date.normalize else parsed_dates
 
     @classmethod
     def _extract_date(cls, text: str) -> Date | None:
@@ -189,8 +248,8 @@ class CommandParser:
         elif year_match:
             year = int(year_match.group())
             return Date(day=None, month=None, year=year)
-        elif text in month_map:
-            return Date(day=None, month=month_map[text], year=None)
+        elif text.lower() in month_map:
+            return Date(day=None, month=month_map[text.lower()], year=None)
         else:
             return None
 
@@ -233,15 +292,15 @@ class CommandParser:
         parser.checkpoint()
         argument_type: TimeArgumentType = TimeArgumentType.Overwrite
         text: str = parser.peak()
-        if text == time_argument_add_prefix_string:
+        if text == Config.data.input.time.add_prefix:
             argument_type = TimeArgumentType.Add
             parser.next()
-        elif text.startswith(time_argument_add_prefix_string):
+        elif text.startswith(Config.data.input.time.add_prefix):
             argument_type = TimeArgumentType.Add
-        elif text == time_argument_subtract_prefix_string:
+        elif text == Config.data.input.time.subtract_prefix:
             argument_type = TimeArgumentType.Subtract
             parser.next()
-        elif text.startswith(time_argument_subtract_prefix_string):
+        elif text.startswith(Config.data.input.time.subtract_prefix):
             argument_type = TimeArgumentType.Subtract
 
         minutes: int = cls._get_minute_count(parser)
@@ -279,7 +338,10 @@ class CommandParser:
         if "/" in text:
             return float(Fraction(text))
         elif "%" in text:
-            return float(text.strip('%')) / 100
+            try:
+                return float(text.strip('%')) / 100
+            except ValueError:
+                return None
         else:
             try:
                 value: Number = int(text)
@@ -307,10 +369,10 @@ class CommandParser:
         if text is None:
             parser.go_to_checkpoint()
             return None
-        elif text.startswith(time_argument_add_prefix_string):
-            text = text[len(time_argument_add_prefix_string):]
-        elif text.startswith(time_argument_subtract_prefix_string):
-            text = text[len(time_argument_subtract_prefix_string):]
+        elif text.startswith(Config.data.input.time.add_prefix):
+            text = text[len(Config.data.input.time.add_prefix):]
+        elif text.startswith(Config.data.input.time.subtract_prefix):
+            text = text[len(Config.data.input.time.subtract_prefix):]
 
         minutes: int = cls._extract_minute_count(text)
         if minutes is not None:

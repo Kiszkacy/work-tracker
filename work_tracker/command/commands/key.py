@@ -12,7 +12,7 @@ class KeyHandler(CommandHandler):
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
             self.io.output(
-                text="Generated keys can be quite long. Do you want to copy it into a clipboard instead of displaying it in a terminal?",
+                text="Generated keys can be thousands of characters long. Do you want to copy it into a clipboard instead of displaying it in a terminal?",
                 color=Color.Brightred,
             )
             while True:

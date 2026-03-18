@@ -1,6 +1,6 @@
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument
-from work_tracker.common import Date, ReadonlyAppState, Mode, find_first_not_fulfilling
+from work_tracker.common import Date, AttendanceType, DayType, ReadonlyAppState, Mode, find_first_not_fulfilling
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode
 
 
@@ -30,13 +30,10 @@ class DayoffHandler(CommandHandler):
 
     def _handle_day(self, date: Date):
         date = date.fill_with_today().to_day_date()
-        self.data.day[date].is_a_work_day = True
-        self.data.day[date].is_a_day_off = True
-        self.data.day[date].remote_work = False
-        self.data.day[date].office_work = False
+        self.data.day[date].attendance_type = AttendanceType.DAYOFF
 
     def _handle_month(self, date: Date):
         date = date.fill_with_today().to_month_date()
         for day in date.days_in_a_month():
-            if self.data.day[day].is_a_work_day:
-                self._handle_day(date)
+            if self.data.day[day].day_type == DayType.WORKDAY:
+                self._handle_day(day)

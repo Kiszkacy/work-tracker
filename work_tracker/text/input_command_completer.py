@@ -6,7 +6,6 @@ from work_tracker.common import month_map
 from work_tracker.config import Config
 
 
-# TODO make it work on backspace (might not be possible)
 class InputCommandCompleter(WordCompleter):
     def __init__(self):
         self.active: bool = True

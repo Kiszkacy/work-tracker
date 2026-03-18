@@ -1,0 +1,9 @@
+1
+h | help
+e | exit
+c | calendar
+q | exit && exit
+ms | $month status
+mo | minutes office
+mr | minutes remote
+s | save

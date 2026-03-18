@@ -6,7 +6,7 @@ import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Type, Callable
+from typing import Type, Callable, Any
 
 import appdirs
 from multimethod import multimethod
@@ -35,24 +35,24 @@ def get_data_path() -> Path:
     return Path(data_path).absolute()
 
 
-def find_first_not_fulfilling(items: list[any], predicate: Callable[[list[any]], bool]) -> any | None:
+def find_first_not_fulfilling(items: list[Any], predicate: Callable[[list[Any]], bool]) -> any | None:
     return next((item for item in items if not predicate(item)), None)
 
 
 class KeyDefaultDict(defaultdict):
-    def __init__(self, function: Callable[[any], any]):
+    def __init__(self, function: Callable[[Any], Any]):
         super().__init__(None)
-        self.function: Callable[[any], any] = function
+        self.function: Callable[[Any], Any] = function
 
-    def __missing__(self, key) -> any:
-        value: any = self.function(key)
+    def __missing__(self, key) -> Any:
+        value: Any = self.function(key)
         self[key] = value
         return value
 
     def __reduce__(self):
         return self.__class__, (self.function,), dict(self)
 
-    def __setstate__(self, state: any):
+    def __setstate__(self, state: Any):
         self.update(state)
 
 
@@ -314,30 +314,42 @@ class Date:
         return normalized_dates
 
 
+class AttendanceType(Enum):
+    PRESENT = auto()
+    DAYOFF = auto()
+    ABSENCE = auto()
+
+
+class DayType(Enum):
+    WORKDAY = auto()
+    WEEKEND = auto()
+    HOLIDAY = auto()
+
+
+class WorkLocation(Enum):
+    UNSPECIFIED = auto()
+    REMOTE = auto()
+    OFFICE = auto()
+
+
 @dataclass
 class DayData: # add setters for remote/office so they autofill properly
-    is_a_work_day: bool = False
+    attendance_type: AttendanceType = AttendanceType.PRESENT
+    day_type: DayType = DayType.WORKDAY
+    work_location: WorkLocation = WorkLocation.UNSPECIFIED  
     minutes_at_work: int = 0
     target_minutes: int = 0
-    remote_work: bool | None = None
-    office_work: bool | None = None
-    is_a_day_off: bool = False
     work_start: Time | None = None
     work_end: Time | None = None
 
-    def __post_init__(self):
-        if self.is_a_work_day and self.remote_work is None:
-            self.remote_work = False
-        if self.is_a_work_day and self.office_work is None:
-            self.office_work = False
-
-    def reset(self, is_a_work_day: bool = False):
-        self.is_a_work_day = is_a_work_day
+    def reset(self, day_type: DayType = DayType.WORKDAY):
+        self.attendance_type = AttendanceType.PRESENT
+        self.day_type = day_type
+        self.work_location = WorkLocation.UNSPECIFIED
         self.minutes_at_work = 0
         self.target_minutes = 0
-        self.remote_work = False if is_a_work_day else None
-        self.office_work = False if is_a_work_day else None
-        self.is_a_day_off = False
+        self.work_start = None
+        self.work_end = None
 
 
 @dataclass
@@ -345,37 +357,17 @@ class MonthData:
     target_minutes: int
     remote_work_ratio: float
     fte: float = 1.0
-    target_office_days: int | None = None
-    target_remote_days: int | None = None
+    # v2 deleted
+    # target_office_days: int | None = None
+    # target_remote_days: int | None = None
 
 
-class WorkStrategy(Enum):
-    Default = auto()
-    Quick = auto()
-
-
-@dataclass
-class WorkSetup:
-    default_fte: float = 1.0
-    preferred_weekdays: list[int] = field(default_factory=list)
-    non_availability_weekdays: list[int] = field(default_factory=list)
-    default_remote_work_ratio: float = 0.4
-    preferred_remote_weekdays: list[int] = field(default_factory=list)
-    preferred_office_day_length_in_minutes: int | None = 480
-    preferred_remote_day_length_in_minutes: int | None = 480
-    office_day_max_length_in_minutes: int | None = 600
-    remote_day_max_length_in_minutes: int | None = 600
-    each_weekday_max_length_in_minutes: list[int | None] = field(default_factory=lambda: [None, None, None, None, None])
-    strategy: WorkStrategy = WorkStrategy.Default
-
-
-__data_version__: int = 1
+__data_version__: int = 2
 
 
 @dataclass
 class AppData:
     country_code: str
-    setup: WorkSetup = field(init=False)
     day: defaultdict[Date, DayData] = field(init=False) # when using KeyDefaultDict as a typehint pycharm IDE breaks and stops suggesting any methods or properties
     month: defaultdict[Date, MonthData] = field(init=False)
     calendar: CoreCalendar = field(init=False, repr=False)
@@ -383,7 +375,6 @@ class AppData:
 
     def __post_init__(self): # this runs only once when user creates new AppData (first time prompt)
         self._version = __data_version__
-        self.setup = WorkSetup()
 
         self.calendar = AppData._determine_country(self.country_code)
         if self.calendar is None:
@@ -401,17 +392,32 @@ class AppData:
         return None
 
     def _on_day_initialization(self, date: Date) -> DayData:
-        return DayData(is_a_work_day=self.calendar.is_working_day(date.to_datetime()))
+        datetime_date: datetime.date = date.to_datetime()
+        
+        if self.calendar.is_working_day(datetime_date):
+            day_type = DayType.WORKDAY
+        elif self.calendar.is_holiday(datetime_date):
+            day_type = DayType.HOLIDAY
+        else:
+            day_type = DayType.WEEKEND
+        
+        return DayData(
+            day_type=day_type,
+            attendance_type=AttendanceType.PRESENT,
+            work_location=WorkLocation.UNSPECIFIED
+        )
         
     def _on_month_initialization(self, date: Date) -> MonthData:
-        target_minutes_total: int = sum([480 * self.setup.default_fte if self.calendar.is_working_day(day.to_datetime()) else 0 for day in date.days_in_a_month()])
-        return MonthData(target_minutes=target_minutes_total, remote_work_ratio=self.setup.default_remote_work_ratio, fte=self.setup.default_fte)
+        from work_tracker.config import Config
+        default_fte: float = Config.data.command.fte.default_value
+        default_remote_work_ratio: float = Config.data.command.rwr.default_value
+        target_minutes_total: int = sum([480 * default_fte if self.calendar.is_working_day(day.to_datetime()) else 0 for day in date.days_in_a_month()])
+        return MonthData(target_minutes=target_minutes_total, remote_work_ratio=default_remote_work_ratio, fte=default_fte)
 
     def copy_from(self, data: AppData):
         if self._version != data._version:
             raise Exception() # TODO
         self.country_code = data.country_code
-        self.setup = data.setup
         self.day = data.day
         self.month = data.month
         self.calendar = data.calendar
@@ -423,9 +429,70 @@ class AppData:
     def is_latest_data_version(self) -> bool:
         return self.version == __data_version__
 
+    def _update_data_to_v2(self):
+        for date, day_data in self.day.items():
+            # get old values
+            old_is_a_work_day: bool = getattr(day_data, 'is_a_work_day', False)
+            old_is_a_day_off: bool = getattr(day_data, 'is_a_day_off', False)
+            old_remote_work: bool | None = getattr(day_data, 'remote_work', None)
+            old_office_work: bool | None = getattr(day_data, 'office_work', None)
+            # config attendance_type
+            attendance_type: AttendanceType
+            if old_is_a_day_off:
+                attendance_type = AttendanceType.DAYOFF
+            else:
+                attendance_type = AttendanceType.PRESENT
+            # config day_type
+            day_type: DayType
+            if old_is_a_work_day:
+                day_type = DayType.WORKDAY
+            else:
+                datetime_date: datetime.date = date.to_datetime()
+                if self.calendar.is_holiday(datetime_date):
+                    day_type = DayType.HOLIDAY
+                else:
+                    day_type = DayType.WEEKEND
+            # config work_location
+            work_location: WorkLocation
+            if old_remote_work is True:
+                work_location = WorkLocation.REMOTE
+            elif old_office_work is True:
+                work_location = WorkLocation.OFFICE
+            else:
+                work_location = WorkLocation.UNSPECIFIED
+            # setup new fields
+            day_data.attendance_type = attendance_type
+            day_data.day_type = day_type
+            day_data.work_location = work_location
+            # remove old fields
+            if hasattr(day_data, 'is_a_work_day'):
+                delattr(day_data, 'is_a_work_day')
+            if hasattr(day_data, 'is_a_day_off'):
+                delattr(day_data, 'is_a_day_off')
+            if hasattr(day_data, 'remote_work'):
+                delattr(day_data, 'remote_work')
+            if hasattr(day_data, 'office_work'):
+                delattr(day_data, 'office_work')
+        
+        # remove old appData field
+        if hasattr(self, 'setup'):
+            delattr(self, 'setup')
+        # remove old monthData fields
+        for date, month_data in self.month.items():
+            if hasattr(month_data, 'target_office_days'):
+                delattr(month_data, 'target_office_days')
+            if hasattr(month_data, 'target_remote_days'):
+                delattr(month_data, 'target_remote_days')
+        
+        self._version = 2
+
     def update_data_to_latest_version(self):
         # if loading a very old version run each updater in order A -> A+1 -> A+2 -> A+3 -> ... B
-        pass
+        current_version: int = self._version
+        
+        if current_version == 1:
+            self._update_data_to_v2()
+            current_version = 2
 
 
 class Mode(Enum):

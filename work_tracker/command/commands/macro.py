@@ -20,16 +20,16 @@ class MacroHandler(CommandHandler):
 
             # TODO add ellipsis here and in other places modifiable by user (custom methods in the future)
             # TODO what if definition is very long => solution: set max length in config and add ellipsis if its too long
-            seperator: str = " | " # TODO make seperator configurable, but the read logic must be changed too
+            separator: str = " | " # TODO make separator configurable, but the read logic must be changed too
             macro_texts: list[str] = []
             for index, (definition, command) in enumerate(zip(macro_definitions, macro_commands)):
                 command_wrapped: str = wrap_text(
                     text=command,
-                    indent=" "*(longest_definition_size + len(seperator)),
+                    indent=" "*(longest_definition_size + len(separator)),
                     omit_first_line_indent=True,
                     frame_wrap=True
                 )
-                macro_texts.append(f"{Color.Brightblack.value if index % 2 == 1 else Color.Reset.value}{definition.rjust(longest_definition_size)}{seperator}{command_wrapped}")
+                macro_texts.append(f"{Color.Brightblack.value if index % 2 == 1 else Color.Reset.value}{definition.rjust(longest_definition_size)}{separator}{command_wrapped}")
 
             framed_text: str = frame_text(
                 text="\n".join(macro_texts),
@@ -61,12 +61,12 @@ class MacroHandler(CommandHandler):
             command_text: str = " ".join(arguments_to_process[command_text_starts_at:])
 
             # TODO check if macro_identifier is equal to an existing command or its abbreviation
-            default_values: list[any] = [] # TODO duplicated code via MacroManager
+            default_values: list[str|None] = [] # TODO duplicated code via MacroManager
             parsed_arguments: list[str] = []
             for argument in macro_arguments:
                 if "=" in argument: # TODO arguments with '=' must be after arguments without it
                     name, value = argument[1:-1].split("=", 1)
-                    default_values.append(value)
+                    default_values.append('') if value.lower() == "null" else default_values.append(value)
                     parsed_arguments.append(f"{name}")
                 else:
                     default_values.append(None)
