@@ -23,6 +23,7 @@ from work_tracker.command.commands.deletemacro import DeletemacroHandler
 from work_tracker.command.commands.done import DoneHandler
 from work_tracker.command.commands.end import EndHandler
 from work_tracker.command.commands.exit import ExitHandler
+from work_tracker.command.commands.files import FilesHandler
 from work_tracker.command.commands.fte import FteHandler
 from work_tracker.command.commands.help import HelpHandler
 from work_tracker.command.commands.history import HistoryHandler
@@ -365,6 +366,14 @@ def end_handler(mocker: MockerFixture) -> EndHandler:
 @pytest.fixture(scope="function")
 def exit_handler(mocker: MockerFixture) -> ExitHandler:
     return ExitHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def files_handler(mocker: MockerFixture) -> FilesHandler:
+    return FilesHandler(
         work_data=sample_data(),
         io=mock_io(mocker)
     )

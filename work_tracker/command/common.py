@@ -340,6 +340,22 @@ _global_command_templates: list[CommandTemplate] = [
         valid_argument_types=[[]],
     ),
     CommandTemplate(
+        name="files",
+        help=CommandHelp(
+            full_use_case_template="files",
+            short_help_description="Displays the path to the directory where all saved files are located",
+            full_help_description=(
+                " Displays the path to the directory where all saved files, including the config.yaml, macros.txt and aliases.txt are stored."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "files", ""),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=[],
+        valid_argument_types=[[]],
+    ),
+    CommandTemplate(
         name="fte",
         help=CommandHelp(
             full_use_case_template="fte [value]",
