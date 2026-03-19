@@ -121,7 +121,7 @@ _global_command_templates: list[CommandTemplate] = [
             short_help_description="Displays, updates or creates aliases",
             full_help_description=(
                 f" Aliases are simple text replacements that occur before command parsing."
-                f" When an alias is detected at the beginning of user input, it is expanded to its replacement text."
+                f" When an alias is detected anywhere in the user input, it is expanded to its replacement text."
                 f" Unlike macros, aliases do not support arguments and are purely text-based substitutions."
                 f" Aliases can be layered, meaning one alias can reference another."
                 f"\n\nTo avoid any problems during the alias definition, it is recommended to enclose the entire command sequence of the macro in quotes (single or double)."
