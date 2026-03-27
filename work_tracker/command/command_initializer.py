@@ -71,7 +71,6 @@ class CommandInitializer:
                 remaining_commands.add(command)
             elif substring_already_exists and substring_is_full_command_name:
                 remaining_commands.add(cls._shortest_command_string[command_substring])
-                substrings_to_pop.add(command_substring)
                 cls._shortest_command_string[command_substring] = command
             elif substring_already_exists and not found_substring_is_full_command_name:
                 remaining_commands.add(cls._shortest_command_string[command_substring])
