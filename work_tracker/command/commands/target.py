@@ -1,7 +1,8 @@
 from enum import Enum, auto
 
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument, TimeArgument
+from work_tracker.command.common import CommandArgument, TimeArgument, CompletionHint, CompletionCandidate
+from prompt_toolkit.completion import Completion
 from work_tracker.common import Date, ReadonlyAppState, Mode, find_first_not_fulfilling, MonthData
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidArgumentValue, CommandErrorInvalidDate, CommandErrorInvalidMode
 from work_tracker.text.common import Color
@@ -14,6 +15,12 @@ class ContextType(Enum):
 
 
 class TargetHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            return cls.get_fitting_completions([CompletionCandidate("office"), CompletionCandidate("remote"), CompletionCandidate("current"), CompletionCandidate(CompletionHint.Time)], last_word)
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
             match state.mode:

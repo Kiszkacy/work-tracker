@@ -1,15 +1,24 @@
 import datetime
 import os
 
+from prompt_toolkit.completion import Completion
 from work_tracker.checkpoint_manager import CheckpointManager, CheckpointTemplate
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument
+from work_tracker.command.common import CommandArgument, CompletionHint, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDateCount, CommandErrorInvalidArgumentValue
 from work_tracker.text.common import Color, wrap_text, frame_text, strip_ansi
 
 
 class CheckpointHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            return cls.get_fitting_completions([CompletionCandidate("<name>", "optional argument, provide to create a new checkpoint"), CompletionCandidate(CompletionHint.Chain)], last_word)
+        if len(typed_words) == 1:
+            return cls.get_fitting_completions([CompletionCandidate("permanent", "checkpoint won't be deleted after exiting the app"), CompletionCandidate(CompletionHint.Chain)], last_word)
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
             checkpoints: list[CheckpointTemplate] = [checkpoint for checkpoint in CheckpointManager.checkpoints() if checkpoint.name.startswith(CheckpointManager.usermade_checkpoint_prefix)]

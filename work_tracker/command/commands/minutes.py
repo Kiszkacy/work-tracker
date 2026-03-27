@@ -1,7 +1,8 @@
 from enum import Enum, auto
 
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument
+from work_tracker.command.common import CommandArgument, CompletionHint, CompletionCandidate
+from prompt_toolkit.completion import Completion
 from work_tracker.common import Date, WorkLocation, ReadonlyAppState, find_first_not_fulfilling, Mode, MonthData
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidArgumentValue, CommandErrorInvalidDate, CommandErrorInvalidMode
 from work_tracker.text.common import about_symbol, Color
@@ -21,6 +22,22 @@ class CommandCallType(Enum):
 
 
 class MinutesHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            candidates = [CompletionCandidate("office", "calculate office-only minutes"), CompletionCandidate("remote", "calculate remote-only minutes"), CompletionCandidate(CompletionHint.Integer, "number of days")]
+        elif len(typed_words) == 1:
+            candidates = [CompletionCandidate(CompletionHint.Integer)] if cls._is_work_type(typed_words[0]) else [CompletionCandidate("clean")]
+        elif len(typed_words) == 2 and cls._is_work_type(typed_words[0]):
+            candidates = [CompletionCandidate("clean")]
+        else:
+            return []
+        return cls.get_fitting_completions(candidates, last_word)
+
+    @staticmethod
+    def _is_work_type(token: str) -> bool:
+        return "office".startswith(token) or "remote".startswith(token)
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         call_type: CommandCallType = None
         

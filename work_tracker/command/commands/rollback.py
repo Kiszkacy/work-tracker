@@ -3,14 +3,26 @@ import os
 
 from work_tracker.checkpoint_manager import CheckpointManager, CheckpointTemplate
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument, AdditionalInputArgument
+from work_tracker.command.common import CommandArgument, AdditionalInputArgument, CompletionHint, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState, AppData
 from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDateCount
 from work_tracker.text.common import Color, wrap_text, frame_text, strip_ansi
+from prompt_toolkit.completion import Completion
 
 
 class RollbackHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            names: list[str] = [
+                checkpoint.name.removeprefix(CheckpointManager.usermade_checkpoint_prefix)
+                for checkpoint in CheckpointManager.checkpoints()
+                if checkpoint.name.startswith(CheckpointManager.usermade_checkpoint_prefix)
+            ]
+            return cls.get_fitting_completions([CompletionCandidate(name) for name in names], last_word)
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 1 and isinstance(arguments[0], str):
             checkpoint_identifier: str = arguments[0]
@@ -117,17 +129,20 @@ class RollbackHandler(CommandHandler):
     def _prompt_selection(self, matches: list[CheckpointTemplate], checkpoint_identifier: str) -> CommandHandlerResult:
         valid_indices: list[str] = [str(i + 1) for i in range(len(matches))]
 
+        self.enter_subcommand_mode()
         while True:
             self._display_found_checkpoints(matches, checkpoint_identifier)
-            user_input: list[AdditionalInputArgument] = self.get_additional_input(custom_autocomplete=valid_indices + ["quit"])
+            user_input: list[AdditionalInputArgument] = self.get_additional_input(custom_autocomplete=valid_indices + ["quit"]) # TODO: handle this properly with new suggestions
             if len(user_input) != 1:
                 continue
 
             if isinstance(user_input[0], int) and 1 <= user_input[0] <= len(matches):
+                self.exit_subcommand_mode()
                 return self._load_checkpoint(matches[user_input[0]-1])
             elif isinstance(user_input[0], str):
                 word: str = user_input[0].lower()
                 if "quit".startswith(word):
+                    self.exit_subcommand_mode()
                     return CommandHandlerResult(undoable=False)
                 else:
                     self.io.output("Unknown command.", color=Color.from_key(Config.data.output.error_color))

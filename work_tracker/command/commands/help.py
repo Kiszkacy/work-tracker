@@ -1,14 +1,21 @@
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.command_manager import CommandManager
 from work_tracker.command.command_parser import CommandParser
-from work_tracker.command.common import CommandArgument, Command
+from work_tracker.command.common import CommandArgument, Command, CompletionHint, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState, Mode
 from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorCustom, CommandErrorInvalidDateCount
 from work_tracker.text.common import wrap_text, Color, frame_text, strip_ansi
+from prompt_toolkit.completion import Completion
 
 
 class HelpHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            return cls.get_fitting_completions([CompletionCandidate(command.name) for command in CommandManager.commands], last_word)
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
             descriptions: list[str] = []

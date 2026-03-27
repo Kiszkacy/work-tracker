@@ -113,7 +113,7 @@ class WorkTracker:
         shutil.copy(Path(__file__).parent.joinpath("data/default.aliases.txt"), get_data_path().joinpath("aliases.txt"))
 
     def _initialize_io(self):
-        self.io = InputOutputHandler()
+        self.io = InputOutputHandler(self.state)
 
     def _load_data(self):
         self.data = CheckpointManager.load_latest()

@@ -16,6 +16,18 @@ class TimeArgumentType(Enum):
     Subtract = auto()
 
 
+class CompletionHint(Enum):
+    Time = auto()
+    Integer = auto()
+    Chain = auto()
+
+
+@dataclass(frozen=True)
+class CompletionCandidate:
+    value: str | CompletionHint
+    meta: str | None = None
+
+
 @dataclass(frozen=True)
 class TimeArgument:
     minutes: int
