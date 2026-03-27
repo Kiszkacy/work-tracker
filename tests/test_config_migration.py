@@ -54,7 +54,7 @@ def _migrate_v1_to_v2() -> dict[str, Any]:
     raw["input"] = dict(CONFIG_V1["input"])
     raw["output"] = {k: v for k, v in CONFIG_V1["output"].items()}
     raw["output"]["frame"] = dict(CONFIG_V1["output"]["frame"])
-    MainConfig._update_config_data_to_latest_version(raw)
+    MainConfig._update_config_data_to_v2(raw)
     return raw
 
 
@@ -67,6 +67,9 @@ def test_v1_to_v2_bumps_version(v1_to_v2: dict[str, Any]):
     assert v1_to_v2["version"] == 2
 
 
+ # TODO: this breaks because the newest version is v3, how to handle this properly in tests?
+ # TODO: should i even care if the v1->v2 config is valid, if it will be updated to v3 either way?
+ # TODO: shouldnt i care only about <any version> -> <newest version>
 def test_v1_to_v2_produces_valid_config(v1_to_v2: dict[str, Any]):
     config: MainConfig = MainConfig(**v1_to_v2)
     assert config.version == 2
