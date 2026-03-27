@@ -39,6 +39,15 @@ class InputOutputHandler:
             complete_while_typing=True
         )
 
+        @keybinds.add('down')
+        def _(event):
+            buffer = event.app.current_buffer
+             # if no completion menu is open, and the input is empty, open suggestions otherwise move down in the completion menu as normal
+            if self._command_completer.active and not buffer.text and not getattr(event.app.current_buffer, 'complete_state', None):
+                buffer.start_completion(select_first=False) # TODO: select_first should be configurable by the user
+            else:
+                buffer.auto_down()
+
     @staticmethod
     def _truncate_history():
         history_path: Path = get_data_path().joinpath("cmd-history")
