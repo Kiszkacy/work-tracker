@@ -6,7 +6,7 @@ from work_tracker.checkpoint_manager import CheckpointManager
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState, Mode
-from work_tracker.error import CommandErrorInvalidArgumentCount
+from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDateCount
 
 
 class ExitHandler(CommandHandler):
@@ -21,5 +21,7 @@ class ExitHandler(CommandHandler):
             else:
                 CheckpointManager.save("exit", self.data, add_suffix_timestamp=True)
                 sys.exit()
+        elif date_count != 0:
+            return CommandHandlerResult(undoable=False, error=CommandErrorInvalidDateCount(self.command_name, received_date_count=date_count, expected_date_count=0))
         else: # argument_count != 0
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidArgumentCount(self.command_name, received_argument_count=argument_count))
