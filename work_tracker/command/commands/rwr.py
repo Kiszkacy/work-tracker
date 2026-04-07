@@ -1,6 +1,7 @@
 from fractions import Fraction
 
-from work_tracker.command.common import CommandArgument
+from prompt_toolkit.completion import Completion
+from work_tracker.command.common import CommandArgument, CompletionCandidate, CompletionHint
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.common import Date, DayType, ReadonlyAppState, Mode, find_first_not_fulfilling
@@ -8,6 +9,13 @@ from work_tracker.text.common import Color
 
 
 class RwrHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            candidates = [CompletionCandidate("1", meta="full-time"), CompletionCandidate("4/5"), CompletionCandidate("3/5"), CompletionCandidate("1/2"), CompletionCandidate("2/5"), CompletionCandidate(CompletionHint.Chain)]
+            return cls.get_fitting_completions(candidates, last_word)
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
             self._output_rwr(state.active_date)

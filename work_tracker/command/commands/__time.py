@@ -1,10 +1,15 @@
+from prompt_toolkit.completion import Completion
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument, TimeArgument, TimeArgumentType
+from work_tracker.command.common import CommandArgument, TimeArgument, TimeArgumentType, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState, find_first_not_fulfilling
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidDateCount
 
 
 class __TimeHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if argument_count == 1:
             if len(dates) == 0:

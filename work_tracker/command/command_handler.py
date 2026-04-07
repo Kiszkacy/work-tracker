@@ -28,10 +28,10 @@ class CommandHandler(ABC):
     def command_name(self) -> str:
         return self.__class__.__name__.split("Handler")[0].lower()
 
-    # TODO make abstractmethod after refactoring existing handlers
     @classmethod
+    @abstractmethod
     def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
-        return []
+        raise NotImplementedError()
     
     @abstractmethod
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
