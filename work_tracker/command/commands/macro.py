@@ -59,6 +59,11 @@ class MacroHandler(CommandHandler):
             macro_identifier: str = arguments[0]
             arguments_to_process: list[str] = arguments[1:]
 
+            # macro cant be named 'macro' nor 'deletemacro' to prevent softlocking user out of creating/updating macros
+            if macro_identifier.lower() in ["macro", "deletemacro"]:
+                self.io.output("Macro identifier cannot be 'macro' or 'deletemacro'.")
+                return CommandHandlerResult(undoable=False)
+
             macro_arguments: list[str] = []
             command_text_starts_at: int = 0
             for index, argument in enumerate(arguments_to_process):
