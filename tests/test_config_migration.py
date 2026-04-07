@@ -1,9 +1,9 @@
+from copy import deepcopy
 from typing import Any
 
 import pytest
 
-from work_tracker.config import MainConfig
-
+from work_tracker.config import MainConfig, __config_version__
 
 CONFIG_V1: dict[str, Any] = {
     "command": {
@@ -45,16 +45,90 @@ CONFIG_V1: dict[str, Any] = {
     "version": 1,
 }
 
+CONFIG_V2: dict[str, Any] = {
+    "command": {
+        "calendar": {
+            "absence_background_color": None,
+            "absence_foreground_color": "brightblue",
+            "dayoff_background_color": None,
+            "dayoff_foreground_color": "brightcyan",
+            "holiday_background_color": None,
+            "holiday_foreground_color": "brightmagenta",
+            "office_background_color": None,
+            "office_foreground_color": "brightred",
+            "office_incomplete_background_color": None,
+            "office_incomplete_foreground_color": "red",
+            "remote_background_color": None,
+            "remote_foreground_color": "brightgreen",
+            "remote_incomplete_background_color": None,
+            "remote_incomplete_foreground_color": "green",
+            "title_color": None,
+            "weekend_background_color": None,
+            "weekend_foreground_color": "yellow",
+        },
+        "fte": {
+            "default_value": 1.0,
+        },
+        "help": {
+            "command_list_description_padding": 2,
+            "command_use_case_bullet_point_symbol": "- ",
+            "command_use_case_description_padding": 4,
+            "command_use_case_indent_size": 2,
+        },
+        "rwr": {
+            "default_value": 0.4,
+        },
+        "undo_history_size": 50,
+    },
+    "input": {
+        "autocompletion": {
+            "max_popup_width": 80,
+        },
+        "command_chain_symbol": "&&",
+        "date": {
+            "multi_start_symbol": "(",
+            "multi_end_symbol": ")",
+            "normalize": False,
+        },
+        "history_size": 1000,
+        "keyword_prefix": "$",
+        "prefix": ">>",
+        "sub_prefix": ":",
+        "time": {
+            "add_prefix": "+",
+            "subtract_prefix": "-",
+        },
+    },
+    "output": {
+        "frame": {
+            "padding": 1,
+            "title_footer_right_side_padding": 2,
+            "title_left_side_padding": 2,
+            "title_padding": 1,
+        },
+        "max_width": 80,
+        "error_color": "brightred",
+    },
+    "version": 2,
+}
+
 
 def _migrate_v1_to_v2() -> dict[str, Any]:
-    raw: dict[str, Any] = {k: v for k, v in CONFIG_V1.items()}
-    raw["command"] = {k: v for k, v in CONFIG_V1["command"].items()}
-    raw["command"]["calendar"] = dict(CONFIG_V1["command"]["calendar"])
-    raw["command"]["help"] = dict(CONFIG_V1["command"]["help"])
-    raw["input"] = dict(CONFIG_V1["input"])
-    raw["output"] = {k: v for k, v in CONFIG_V1["output"].items()}
-    raw["output"]["frame"] = dict(CONFIG_V1["output"]["frame"])
+    raw: dict[str, Any] = deepcopy(CONFIG_V1)
     MainConfig._update_config_data_to_v2(raw)
+    return raw
+
+
+def _migrate_v1_to_v3() -> dict[str, Any]:
+    raw: dict[str, Any] = deepcopy(CONFIG_V1)
+    MainConfig._update_config_data_to_v2(raw)
+    MainConfig._update_config_data_to_v3(raw)
+    return raw
+
+
+def _migrate_v2_to_v3() -> dict[str, Any]:
+    raw: dict[str, Any] = deepcopy(CONFIG_V2)
+    MainConfig._update_config_data_to_v3(raw)
     return raw
 
 
@@ -63,16 +137,32 @@ def v1_to_v2() -> dict[str, Any]:
     return _migrate_v1_to_v2()
 
 
-def test_v1_to_v2_bumps_version(v1_to_v2: dict[str, Any]):
-    assert v1_to_v2["version"] == 2
+@pytest.fixture
+def v1_to_v3() -> dict[str, Any]:
+    return _migrate_v1_to_v3()
 
 
- # TODO: this breaks because the newest version is v3, how to handle this properly in tests?
- # TODO: should i even care if the v1->v2 config is valid, if it will be updated to v3 either way?
- # TODO: shouldnt i care only about <any version> -> <newest version>
-def test_v1_to_v2_produces_valid_config(v1_to_v2: dict[str, Any]):
-    config: MainConfig = MainConfig(**v1_to_v2)
-    assert config.version == 2
+@pytest.fixture
+def v2_to_v3() -> dict[str, Any]:
+    return _migrate_v2_to_v3()
+
+
+def test_v1_to_v3_bumps_version(v1_to_v3: dict[str, Any]):
+    assert v1_to_v3["version"] == __config_version__
+
+
+def test_v2_to_v3_bumps_version(v2_to_v3: dict[str, Any]):
+    assert v2_to_v3["version"] == __config_version__
+
+
+def test_v1_to_v3_produces_valid_config(v1_to_v3: dict[str, Any]):
+    config: MainConfig = MainConfig(**v1_to_v3)
+    assert config.version == __config_version__
+
+
+def test_v2_to_v3_produces_valid_config(v2_to_v3: dict[str, Any]):
+    config: MainConfig = MainConfig(**v2_to_v3)
+    assert config.version == __config_version__
 
 
 # --- input ---
@@ -103,6 +193,10 @@ def test_v1_to_v2_adds_time_add_prefix(v1_to_v2: dict[str, Any]):
 
 def test_v1_to_v2_adds_time_subtract_prefix(v1_to_v2: dict[str, Any]):
     assert v1_to_v2["input"]["time"]["subtract_prefix"] == "-"
+
+
+def test_v2_to_v3_adds_autocompletion_max_popup_width(v2_to_v3: dict[str, Any]):
+    assert v2_to_v3["input"]["autocompletion"]["max_popup_width"] == 80
 
 
 # --- command ---
