@@ -9,7 +9,7 @@ class CommandTextParser:
 
     @staticmethod
     def _split_words(text: str) -> list[str]:
-        pattern: str = r'"([^"]+)"|\'([^\']+)\'|(\S+)' # this pattern splits at whitespaces unless string is inside quotes
+        pattern: str = r'("[^"]+")|(\'[^\']+\')|(\S+)' # this pattern splits at whitespaces unless string is inside quotes
         matches: list = re.findall(pattern, text)
         return [match[0] or match[1] or match[2] for match in matches]
 
