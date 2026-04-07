@@ -99,7 +99,7 @@ class ConfigHandler(CommandHandler):
         parent: BaseModel = self._get_config_value_via_dot_keys(".".join(keys[:-1]), False)
         processed_value: Any = None if str(value).lower() in ("null", "none") else value
         try:
-            annotation: type = parent.model_fields[last_key].annotation
+            annotation: type = parent.__class__.model_fields[last_key].annotation
             validated_value: Any = TypeAdapter(annotation).validate_python(processed_value)
             setattr(parent, last_key, validated_value)
             Config.save()
