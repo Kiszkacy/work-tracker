@@ -1,4 +1,5 @@
 from prompt_toolkit.completion import Completion
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, TimeArgument, TimeArgumentType, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState, find_first_not_fulfilling

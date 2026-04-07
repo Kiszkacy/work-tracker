@@ -1,11 +1,12 @@
 import sys
 
 from prompt_toolkit.completion import Completion
-from work_tracker.command.common import CommandArgument, CompletionCandidate
-from work_tracker.error import CommandErrorInvalidArgumentCount
-from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.common import Date, ReadonlyAppState, Mode
+
 from work_tracker.checkpoint_manager import CheckpointManager
+from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
+from work_tracker.command.common import CommandArgument, CompletionCandidate
+from work_tracker.common import Date, ReadonlyAppState, Mode
+from work_tracker.error import CommandErrorInvalidArgumentCount
 
 
 class ExitHandler(CommandHandler):

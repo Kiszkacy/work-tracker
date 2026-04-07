@@ -1,5 +1,5 @@
-from prompt_toolkit.completion import Completion
 import pyperclip
+from prompt_toolkit.completion import Completion
 
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, AdditionalInputArgument, CompletionCandidate, CompletionHint

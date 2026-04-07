@@ -1,10 +1,11 @@
-from work_tracker.config import Config
-from work_tracker.error import CommandErrorInvalidDateCount, CommandErrorInvalidArgumentCount
 from prompt_toolkit.completion import Completion
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, CompletionCandidate
 from work_tracker.command.keyword_manager import KeywordManager, KeywordTemplate
 from work_tracker.common import Date, Mode, ReadonlyAppState
+from work_tracker.config import Config
+from work_tracker.error import CommandErrorInvalidDateCount, CommandErrorInvalidArgumentCount
 from work_tracker.text.common import wrap_text, frame_text, Color, strip_ansi
 
 

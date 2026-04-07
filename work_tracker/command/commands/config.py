@@ -1,17 +1,15 @@
 from typing import Any
 
 import yaml
+from prompt_toolkit.completion import Completion
 from pydantic import BaseModel
 
-from prompt_toolkit.completion import Completion
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState
 from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDateCount
 from work_tracker.text.common import Color
-
-
 
 
 class ConfigHandler(CommandHandler):

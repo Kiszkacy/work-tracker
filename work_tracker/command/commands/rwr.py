@@ -1,10 +1,11 @@
 from fractions import Fraction
 
 from prompt_toolkit.completion import Completion
-from work_tracker.command.common import CommandArgument, CompletionCandidate, CompletionHint
-from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
+from work_tracker.command.common import CommandArgument, CompletionCandidate, CompletionHint
 from work_tracker.common import Date, DayType, ReadonlyAppState, Mode, find_first_not_fulfilling
+from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidMode
 from work_tracker.text.common import Color
 
 

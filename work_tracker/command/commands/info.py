@@ -1,7 +1,8 @@
-import calendar as cal
 from fractions import Fraction
 
 from prompt_toolkit.completion import Completion
+
+import calendar as cal
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, CompletionCandidate
 from work_tracker.common import Date, DayData, Mode, MonthData, ReadonlyAppState, DayType, WorkLocation, AttendanceType, find_first_not_fulfilling

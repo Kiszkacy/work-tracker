@@ -1,14 +1,15 @@
 import datetime
 import os
 
+from prompt_toolkit.completion import Completion
+
 from work_tracker.checkpoint_manager import CheckpointManager, CheckpointTemplate
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument, AdditionalInputArgument, CompletionHint, CompletionCandidate
+from work_tracker.command.common import CommandArgument, AdditionalInputArgument, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState, AppData
 from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDateCount
 from work_tracker.text.common import Color, wrap_text, frame_text, strip_ansi
-from prompt_toolkit.completion import Completion
 
 
 class RollbackHandler(CommandHandler):

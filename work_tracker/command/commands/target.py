@@ -1,8 +1,9 @@
 from enum import Enum, auto
 
+from prompt_toolkit.completion import Completion
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, TimeArgument, CompletionHint, CompletionCandidate
-from prompt_toolkit.completion import Completion
 from work_tracker.common import Date, ReadonlyAppState, Mode, find_first_not_fulfilling, MonthData
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidArgumentValue, CommandErrorInvalidDate, CommandErrorInvalidMode
 from work_tracker.text.common import Color

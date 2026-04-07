@@ -1,9 +1,10 @@
-from work_tracker.error import CommandErrorInvalidDateCount
 from prompt_toolkit.completion import Completion
+
+from work_tracker.command.alias_manager import AliasManager, AliasTemplate
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, CompletionCandidate, CompletionHint
-from work_tracker.command.alias_manager import AliasManager, AliasTemplate
 from work_tracker.common import Date, ReadonlyAppState
+from work_tracker.error import CommandErrorInvalidDateCount
 from work_tracker.text.common import wrap_text, frame_text, Color
 
 

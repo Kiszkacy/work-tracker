@@ -1,12 +1,13 @@
+from prompt_toolkit.completion import Completion
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.command_manager import CommandManager
 from work_tracker.command.command_parser import CommandParser
-from work_tracker.command.common import CommandArgument, Command, CompletionHint, CompletionCandidate
+from work_tracker.command.common import CommandArgument, Command, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState, Mode
 from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorCustom, CommandErrorInvalidDateCount
 from work_tracker.text.common import wrap_text, Color, frame_text, strip_ansi
-from prompt_toolkit.completion import Completion
 
 
 class HelpHandler(CommandHandler):

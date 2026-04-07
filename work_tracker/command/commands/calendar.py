@@ -1,8 +1,9 @@
-import calendar
 import re
 from enum import Enum, auto
 
 from prompt_toolkit.completion import Completion
+
+import calendar
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, CompletionCandidate
 from work_tracker.common import Date, AttendanceType, DayType, WorkLocation, ReadonlyAppState, find_first_not_fulfilling

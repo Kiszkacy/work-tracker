@@ -2,6 +2,7 @@ import datetime
 import os
 
 from prompt_toolkit.completion import Completion
+
 from work_tracker.checkpoint_manager import CheckpointManager, CheckpointTemplate
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, CompletionHint, CompletionCandidate
