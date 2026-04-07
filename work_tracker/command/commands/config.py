@@ -2,7 +2,7 @@ from typing import Any
 
 import yaml
 from prompt_toolkit.completion import Completion
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
 from work_tracker.command.common import CommandArgument, CompletionCandidate
@@ -42,10 +42,10 @@ class ConfigHandler(CommandHandler):
             return CommandHandlerResult(undoable=False)
         elif date_count == 0 and argument_count == 1:
             value: Any = self._get_printable_nested_config_value(arguments[0])
-            if value is None:
+            if value is self._MISSING:
                 self.io.output(f"The field {Color.Brightblue.value}{arguments[0]}{Color.Reset.value} could not be found in the config.")
             else:
-                self.io.output(f"{value}")
+                self.io.output(f"{value if value is not None else 'null'}")
             return CommandHandlerResult(undoable=False)
         elif date_count == 0 and argument_count == 2:
             changed_successfully: bool = self._set_config_value_via_dot_keys(arguments[0], arguments[1])
@@ -96,19 +96,22 @@ class ConfigHandler(CommandHandler):
             self.io.output(f"The field {Color.from_key(Config.data.output.error_color).value}{value_path}{Color.Reset.value} is not a changeable config field.")
             return False
 
-        expected_type: type = type(getattr(dictionary, last_key)) # TODO this wont work if field can be assigned multiple types
-        if not isinstance(value, expected_type):
+        parent: BaseModel = self._get_config_value_via_dot_keys(".".join(keys[:-1]), False)
+        processed_value: Any = None if str(value).lower() in ("null", "none") else value
+        try:
+            annotation: type = parent.model_fields[last_key].annotation
+            validated_value: Any = TypeAdapter(annotation).validate_python(processed_value)
+            setattr(parent, last_key, validated_value)
+            Config.save()
+            return True
+        except Exception:
             self.io.output(f"Invalid type of value to change field {Color.from_key(Config.data.output.error_color).value}{last_key}{Color.Reset.value}.")
             return False
-
-        setattr(dictionary, last_key, value)
-        Config.save()
-        return True
 
     def _get_printable_nested_config_value(self, value_path: str) -> Any:
         value: Any = self._get_config_value_via_dot_keys(value_path, True)
         if value is self._MISSING:
-            return None
+            return self._MISSING
 
         if isinstance(value, dict):
             yamllike_text: str = yaml.safe_dump(value, default_flow_style=False, sort_keys=False)
