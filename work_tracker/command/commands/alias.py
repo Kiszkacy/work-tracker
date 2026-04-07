@@ -61,6 +61,10 @@ class AliasHandler(CommandHandler):
             if alias_identifier.lower() in ["alias", "deletealias"]:
                 self.io.output("Alias identifier cannot be 'alias' or 'deletealias'.")
                 return CommandHandlerResult(undoable=False)
+
+            if alias_identifier.find(" "):
+                self.io.output(f"Alias identifier cannot have whitespaces in its name. Try using an underscore ({Color.Brightblue.value}_{Color.Reset.value}) instead.")
+                return CommandHandlerResult(undoable=False)
             
             alias: AliasTemplate = AliasTemplate(
                 identifier=alias_identifier,
