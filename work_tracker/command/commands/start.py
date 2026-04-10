@@ -12,7 +12,7 @@ class StartHandler(CommandHandler):
     @classmethod
     def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
         if len(typed_words) == 0:
-            return cls.get_fitting_completions([CompletionCandidate("8:00"), CompletionCandidate("9:00"), CompletionCandidate(CompletionHint.Chain)], last_word)
+            return cls.get_fitting_completions([CompletionCandidate("8:00", "example start hour"), CompletionCandidate("9:00", "example start hour"), CompletionCandidate(CompletionHint.Chain)], last_word)
         return []
 
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
