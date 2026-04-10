@@ -153,7 +153,6 @@ _global_command_templates: list[CommandTemplate] = [
     CommandTemplate(
         name="calendar",
         help=CommandHelp(
-            full_use_case_template="calendar",
             full_use_case_template="calendar ['legend']",
             short_help_description="Displays the calendar for the month",
             full_help_description=(
@@ -163,14 +162,12 @@ _global_command_templates: list[CommandTemplate] = [
                 f" Use {Color.Brightblue.value}calendar legend{Color.Reset.value} to display the color legend."
             ).strip(),
             use_case_description=[
-                CommandUseCaseDescription(set(Mode), "calendar", ""),
                 CommandUseCaseDescription(set(Mode), "calendar", "displays the calendar for the currently active month"),
                 CommandUseCaseDescription(set(Mode), "calendar 'legend'", "displays the color legend"),
             ],
         ),
         supported_modes=set(Mode),
         abbreviations=[],
-        valid_argument_types=[[]],
         valid_argument_types=[[], [str]],
     ),
     CommandTemplate(
