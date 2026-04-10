@@ -72,7 +72,7 @@ class InputOutputHandler:
         with open(history_path, "w", newline="\n") as file:
             file.writelines(lines[-Config.data.input.history_size*3:]) # 3 = size of one command
 
-    def input(self, prefix: str, show_autocomplete: bool = True, custom_autocomplete: list[str] = None) -> str:
+    def input(self, prefix: str, show_autocomplete: bool = True, custom_autocomplete: list[str] | dict[str, str] = None) -> str:
         if custom_autocomplete is not None:
             self._command_completer.activate_custom_autocomplete(custom_autocomplete)
 

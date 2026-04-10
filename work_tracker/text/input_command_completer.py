@@ -178,8 +178,16 @@ class InputCommandCompleter(WordCompleter):
             elif isinstance(candidate, Completion):
                 yield candidate
 
-    def activate_custom_autocomplete(self, autocomplete_list: list[str]): # TODO: this does not work currently
+    def activate_custom_autocomplete(self, autocomplete: list[str] | dict[str, str]):
+        if isinstance(autocomplete, dict):
+            self.words = list(autocomplete.keys())
+            self.meta_dict = autocomplete
+        else:
+            self.words = autocomplete
+            self.meta_dict = {}
         self.custom_autocomplete = True
 
     def deactivate_custom_autocomplete(self):
         self.custom_autocomplete = False
+        self.words = []
+        self.meta_dict = {}
