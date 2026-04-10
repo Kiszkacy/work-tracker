@@ -68,7 +68,8 @@ class HelpHandler(CommandHandler):
 
             modes: list[Mode] = [Mode.Today, Mode.Day, Mode.Month]  # explicit list to define custom order of values
             modes_text: str = " | ".join([f"{(Color.Green if mode in command.supported_modes else Color.Red).value}{mode.name}{Color.Reset.value}" for mode in modes])
-            usage_text: str = f"Supported modes: {modes_text}"
+            shortest_text: str = f"Shortest acceptable input: {Color.Brightblue.value}{command.shortest_valid_string}{Color.Reset.value}"
+            usage_text: str = f"{shortest_text}\nSupported modes: {modes_text}"
 
             if len(command.help.use_case_description) != 1:
                 for index, use_case in enumerate(command.help.use_case_description):
