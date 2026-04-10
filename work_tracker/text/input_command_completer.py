@@ -8,7 +8,7 @@ from work_tracker.command.alias_manager import AliasManager
 from work_tracker.command.command_manager import CommandManager
 from work_tracker.command.command_parser import CommandParser
 from work_tracker.command.common import Command, CompletionHint, CompletionCandidate
-from work_tracker.command.keyword_manager import KeywordManager
+from work_tracker.command.keyword_manager import KeywordManager, KeywordTemplate
 from work_tracker.command.macro_manager import MacroManager, MacroTemplate
 from work_tracker.common import AppState
 from work_tracker.config import Config
@@ -81,17 +81,24 @@ class InputCommandCompleter(WordCompleter):
             completions = list(self._command_completions(command, handler_committed, partial))
 
         if not completions and trailing_space and not partial:
-            return [Completion(Config.data.input.command_chain_symbol, start_position=0, display_meta="chain another command")]
+            chain_symbol: str = Config.data.input.command_chain_symbol
+            return [Completion(chain_symbol, start_position=0, display_meta=self._truncate_meta("chain another command", len(chain_symbol)))]
         return completions
 
     def _keyword_completions(self, partial: str):
         after_prefix: str = partial[len(Config.data.input.keyword_prefix):]
-        for keyword in KeywordManager.iterable_keywords:
+        matching: list[KeywordTemplate] = [
+            keyword for keyword in KeywordManager.iterable_keywords
+            if keyword.identifier.lower().startswith(after_prefix.lower())
+        ]
+        if not matching:
+            return
+        
+        max_suggestion_width: int = max(len(Config.data.input.keyword_prefix + keyword.identifier) for keyword in matching)
+        for keyword in matching:
             candidate: str = Config.data.input.keyword_prefix + keyword.identifier
-            if not keyword.identifier.lower().startswith(after_prefix.lower()):
-                continue
             meta: str = self._get_keyword_meta(keyword.identifier)
-            yield Completion(candidate, start_position=-len(partial), style="bg:ansigreen", display_meta=meta)
+            yield Completion(candidate, start_position=-len(partial), style="bg:ansigreen", display_meta=self._truncate_meta(meta, max_suggestion_width))
 
     def _get_keyword_meta(self, identifier: str) -> str:
         if self._state is None:
@@ -128,17 +135,21 @@ class InputCommandCompleter(WordCompleter):
         if not raw:
             return
 
-        max_text: int = max(len(c) for c, _, _ in raw)
-        suggestion_box: int = max(7, max_text + 2) # min size = 7, max size = biggest candidate size + 2 padding
-        max_meta_width: int = Config.data.input.autocompletion.max_popup_width - suggestion_box - 2 # truncate meta
+        max_text: int = max(len(suggestion) for suggestion, _, _ in raw)
 
         for candidate, meta, style in raw:
             yield Completion(
                 candidate,
                 start_position=-len(partial),
                 style=style,
-                display_meta=meta if len(meta) <= max_meta_width else meta[:max_meta_width - 1].rstrip() + "…"
+                display_meta=self._truncate_meta(meta, max_text)
             )
+
+    @staticmethod
+    def _truncate_meta(meta: str, max_suggestion_width: int) -> str:
+        suggestion_box: int = max(7, max_suggestion_width + 2)
+        max_meta_width: int = Config.data.input.autocompletion.max_popup_width - suggestion_box - 3
+        return meta if len(meta) <= max_meta_width else meta[:max_meta_width - 1].rstrip() + "…"
 
     def _macro_completions(self, macro: MacroTemplate, committed: list[str], partial: str):
         position: int = len(committed)
@@ -149,7 +160,7 @@ class InputCommandCompleter(WordCompleter):
         meta: str = f"optional argument, default: {default}" if default is not None else "required argument"
         display: str = f"<{arg_name}>"
         if display.lower().startswith(partial.lower()):
-            yield Completion(display, start_position=-len(partial), display_meta=meta)
+            yield Completion(display, start_position=-len(partial), display_meta=self._truncate_meta(meta, len(display)))
 
     def _command_completions(self, command: Command, committed: list[str], partial: str):
         try:
@@ -160,21 +171,28 @@ class InputCommandCompleter(WordCompleter):
         candidates: list[Completion | CompletionCandidate] = command_class.get_completions(committed, partial, self.in_subcommand_mode)
         yield from self._build_command_completions(candidates, partial)
 
-    def _build_command_completions(self, candidates: list, partial: str):
+    def _build_command_completions(self, candidates: list[Completion | CompletionCandidate], partial: str):
+        completion_candidates: list[str] = [candidate.value for candidate in candidates if isinstance(candidate, CompletionCandidate) and isinstance(candidate.value, str)]
+        completion_hints: list[str] = ["8h", "1:30", "90m", "1", "5", "10", "20", Config.data.input.command_chain_symbol] # TODO: temp hardcoded suggestions
+        completions: list[str] = [candidate.text for candidate in candidates if isinstance(candidate, Completion)]
+        max_suggestion_width: int = max((len(suggestion) for suggestion in completion_candidates + completion_hints + completions), default=0)
+
         for candidate in candidates:
             if isinstance(candidate, CompletionCandidate):
                 if isinstance(candidate.value, CompletionHint):
                     if candidate.value == CompletionHint.Time:
                         for example in ("8h", "1:30", "90m"): # TODO: handle examples properly, try to determine what user uses usually
-                            if example.startswith(partial):
-                                yield Completion(example, start_position=-len(partial), display_meta=candidate.meta or "time")
+                            if example.lower().startswith(partial.lower()):
+                                yield Completion(example, start_position=-len(partial), display_meta=self._truncate_meta(candidate.meta or "time", max_suggestion_width))
                     elif candidate.value == CompletionHint.Integer:
                         for example in ("1", "5", "10", "20"):
-                            if example.startswith(partial):
-                                yield Completion(example, start_position=-len(partial), display_meta=candidate.meta or "number")
+                            if example.lower().startswith(partial.lower()):
+                                yield Completion(example, start_position=-len(partial), display_meta=self._truncate_meta(candidate.meta or "number", max_suggestion_width))
                     elif candidate.value == CompletionHint.Chain:
-                        if Config.data.input.command_chain_symbol.startswith(partial):
-                            yield Completion(Config.data.input.command_chain_symbol, start_position=-len(partial), display_meta=candidate.meta or "chain another command")
+                        if Config.data.input.command_chain_symbol.lower().startswith(partial.lower()):
+                            yield Completion(Config.data.input.command_chain_symbol, start_position=-len(partial), display_meta=self._truncate_meta(candidate.meta or "chain another command", max_suggestion_width))
+                elif isinstance(candidate.value, str) and candidate.value.lower().startswith(partial.lower()):
+                    yield Completion(candidate.value, start_position=-len(partial), display_meta=self._truncate_meta(candidate.meta or "", max_suggestion_width))
             elif isinstance(candidate, Completion):
                 yield candidate
 
