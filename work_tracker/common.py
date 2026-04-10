@@ -24,12 +24,20 @@ month_map: dict[str, int] = { # 'jan', 'january', 'feb', 'february', ...
 
 
 def get_cache_path() -> Path:
+    if env_path := os.environ.get("WORK_TRACKER_CACHE_DIR"):
+        path: Path = Path(env_path)
+        os.makedirs(path, exist_ok=True)
+        return path.absolute()
     cache_path: str = appdirs.user_cache_dir("work_tracker", "kiszkacy")
     os.makedirs(cache_path, exist_ok=True)
     return Path(cache_path).absolute()
 
 
 def get_data_path() -> Path:
+    if env_path := os.environ.get("WORK_TRACKER_DATA_DIR"):
+        path: Path = Path(env_path)
+        os.makedirs(path, exist_ok=True)
+        return path.absolute()
     data_path: str = appdirs.user_data_dir("work_tracker", "kiszkacy")
     os.makedirs(data_path, exist_ok=True)
     return Path(data_path).absolute()
