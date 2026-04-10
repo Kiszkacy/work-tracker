@@ -111,8 +111,12 @@ class InfoHandler(CommandHandler):
 
         days_in_month: list[Date] = filled_date.days_in_a_month()
         working_days: int = sum(1 for day in days_in_month if self.data.day[day].day_type == DayType.WORKDAY)
-        office_days: int = sum(1 for day in days_in_month if self.data.day[day].work_location == WorkLocation.OFFICE)
-        remote_days: int = sum(1 for day in days_in_month if self.data.day[day].work_location == WorkLocation.REMOTE)
+        office_days: int = sum(1 for day in days_in_month if self.data.day[day].work_location == WorkLocation.OFFICE and self.data.day[day].attendance_type == AttendanceType.PRESENT)
+        remote_days: int = sum(1 for day in days_in_month if self.data.day[day].work_location == WorkLocation.REMOTE and self.data.day[day].attendance_type == AttendanceType.PRESENT)
+        office_days_total: int = sum(1 for day in days_in_month if self.data.day[day].work_location == WorkLocation.OFFICE)
+        remote_days_total: int = sum(1 for day in days_in_month if self.data.day[day].work_location == WorkLocation.REMOTE)
+        office_days_text: str = str(office_days) if office_days == office_days_total else f"{office_days} ({office_days_total} total)"
+        remote_days_text: str = str(remote_days) if remote_days == remote_days_total else f"{remote_days} ({remote_days_total} total)"
         absent_days: int = sum(1 for day in days_in_month if self.data.day[day].attendance_type == AttendanceType.ABSENCE)
         day_offs: int = sum(1 for day in days_in_month if self.data.day[day].attendance_type == AttendanceType.DAYOFF)
 
@@ -123,8 +127,8 @@ class InfoHandler(CommandHandler):
             ("target office time", self._format_minutes(target_minutes_office)),
             ("target remote time", self._format_minutes(target_minutes_remote)),
             ("working days", str(working_days)),
-            ("office days", str(office_days)),
-            ("remote days", str(remote_days)),
+            ("office days", office_days_text),
+            ("remote days", remote_days_text),
             ("absent days", str(absent_days)),
             ("day offs", str(day_offs)),
         ]
