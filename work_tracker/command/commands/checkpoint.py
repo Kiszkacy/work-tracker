@@ -22,13 +22,13 @@ class CheckpointHandler(CommandHandler):
 
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
-            checkpoints: list[CheckpointTemplate] = [checkpoint for checkpoint in CheckpointManager.checkpoints() if checkpoint.name.startswith(CheckpointManager.usermade_checkpoint_prefix)]
+            checkpoints: list[CheckpointTemplate] = [checkpoint for checkpoint in CheckpointManager.checkpoints() if checkpoint.name.startswith(CheckpointManager.usermade_checkpoint_prefix)] # TODO: allow user to disable this filtering
 
             if len(checkpoints) == 0:
                 self.io.output(f"No checkpoints were yet created, create one via {Color.Brightblue.value}checkpoint <name>{Color.Reset.value}.")
                 return CommandHandlerResult(undoable=False)
 
-            sorted_checkpoints_by_time: list[CheckpointTemplate] = sorted(checkpoints, key=lambda checkpoint: os.path.getctime(checkpoint.path)) # TODO this sorting might be unclear for user
+            sorted_checkpoints_by_time: list[CheckpointTemplate] = sorted(checkpoints, key=lambda checkpoint: checkpoint.ctime) # TODO this sorting might be unclear for user
 
             formatted_dates: list[str] = [
                 checkpoint.date if checkpoint.date == "-" else datetime.datetime.strptime(checkpoint.date, "%Y-%m-%d_%H-%M-%S").strftime("%d-%m-%Y %H:%M:%S")

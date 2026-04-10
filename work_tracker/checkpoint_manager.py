@@ -18,6 +18,7 @@ class CheckpointTemplate:
     name: str
     date: str
     persistent: bool
+    ctime: float = 0.0
 
 
 # deprecated classes for unpickling old data - only used during initial load after update
@@ -93,25 +94,25 @@ class CheckpointManager:
         if not checkpoints:
             return None
 
-        newest: CheckpointTemplate = max(checkpoints, key=lambda c: os.path.getctime(c.path)) # TODO this sorting might be unclear for user
+        newest: CheckpointTemplate = max(checkpoints, key=lambda checkpoint: checkpoint.ctime) # TODO this sorting might be unclear for user
         return cls.load(newest.full_identifier)
 
     @classmethod
     def persistent_checkpoints(cls) -> list[CheckpointTemplate]: # TODO os exceptions
-        paths: list[Path] = [get_data_path().joinpath(file) for file in os.listdir(get_data_path()) if file.endswith(cls._checkpoint_suffix) and os.path.isfile(get_data_path().joinpath(file))]
-        return [cls._parse_checkpoint(path, persistent=True) for path in paths]
+        base: Path = get_data_path()
+        return [cls._parse_checkpoint(base.joinpath(entry.name), persistent=True, ctime=entry.stat().st_ctime) for entry in os.scandir(base) if entry.is_file() and entry.name.endswith(cls._checkpoint_suffix)]
 
     @classmethod
     def temporary_checkpoints(cls) -> list[CheckpointTemplate]: # TODO os exceptions
-        paths: list[Path] = [get_cache_path().joinpath(file) for file in os.listdir(get_cache_path()) if file.endswith(cls._checkpoint_suffix) and os.path.isfile(get_cache_path().joinpath(file))]
-        return [cls._parse_checkpoint(path, persistent=False) for path in paths]
+        base: Path = get_cache_path()
+        return [cls._parse_checkpoint(base.joinpath(entry.name), persistent=False, ctime=entry.stat().st_ctime) for entry in os.scandir(base) if entry.is_file() and entry.name.endswith(cls._checkpoint_suffix)]
 
     @classmethod
     def checkpoints(cls) -> list[CheckpointTemplate]: # TODO os exceptions
         return cls.temporary_checkpoints() + cls.persistent_checkpoints()
 
     @classmethod
-    def _parse_checkpoint(cls, path: Path, persistent: bool) -> CheckpointTemplate:
+    def _parse_checkpoint(cls, path: Path, persistent: bool, ctime: float = 0.0) -> CheckpointTemplate:
         raw_name: str = path.name.removesuffix(cls._checkpoint_suffix)
         match: re.Match = re.match(r"(.+?)__(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})$", raw_name)
         if match:
@@ -127,12 +128,13 @@ class CheckpointManager:
             full_identifier=full_identifier,
             name=name,
             date=date,
-            persistent=persistent
+            persistent=persistent,
+            ctime=ctime
         )
 
     @staticmethod
     def clear_cache():
-        for name in os.listdir(get_cache_path()):
-            if not os.path.isfile(get_cache_path().joinpath(name)):
-                continue
-            os.remove(get_cache_path().joinpath(name))
+        base: Path = get_cache_path()
+        for entry in os.scandir(base):
+            if entry.is_file():
+                os.remove(entry.path)
