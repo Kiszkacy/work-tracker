@@ -154,19 +154,24 @@ _global_command_templates: list[CommandTemplate] = [
         name="calendar",
         help=CommandHelp(
             full_use_case_template="calendar",
+            full_use_case_template="calendar ['legend']",
             short_help_description="Displays the calendar for the month",
             full_help_description=(
                 " Displays the calendar for the month corresponding to the given date."
                 f" Dates are marked using a color-coded legend which can be easily configured via {Color.Brightblue.value}config{Color.Reset.value} command,"
                 " this provides a clear distinction between different types of days."
+                f" Use {Color.Brightblue.value}calendar legend{Color.Reset.value} to display the color legend."
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "calendar", ""),
+                CommandUseCaseDescription(set(Mode), "calendar", "displays the calendar for the currently active month"),
+                CommandUseCaseDescription(set(Mode), "calendar 'legend'", "displays the color legend"),
             ],
         ),
         supported_modes=set(Mode),
         abbreviations=[],
         valid_argument_types=[[]],
+        valid_argument_types=[[], [str]],
     ),
     CommandTemplate(
         name="checkpoint",
