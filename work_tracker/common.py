@@ -392,17 +392,8 @@ class AppData:
         return None
 
     def _on_day_initialization(self, date: Date) -> DayData:
-        datetime_date: datetime.date = date.to_datetime()
-        
-        if self.calendar.is_working_day(datetime_date):
-            day_type = DayType.WORKDAY
-        elif self.calendar.is_holiday(datetime_date):
-            day_type = DayType.HOLIDAY
-        else:
-            day_type = DayType.WEEKEND
-        
         return DayData(
-            day_type=day_type,
+            day_type=self._get_default_day_type(self.calendar, date),
             attendance_type=AttendanceType.PRESENT,
             work_location=WorkLocation.UNSPECIFIED
         )
@@ -413,6 +404,30 @@ class AppData:
         default_remote_work_ratio: float = Config.data.command.rwr.default_value
         target_minutes_total: int = sum([480 * default_fte if self.calendar.is_working_day(day.to_datetime()) else 0 for day in date.days_in_a_month()])
         return MonthData(target_minutes=target_minutes_total, remote_work_ratio=default_remote_work_ratio, fte=default_fte)
+
+    def _get_default_day_type(self, calendar: CoreCalendar, date: Date) -> DayType:
+        datetime_date: datetime.date = date.to_datetime()
+        if calendar.is_working_day(datetime_date):
+            return DayType.WORKDAY
+        elif calendar.is_holiday(datetime_date):
+            return DayType.HOLIDAY
+        else:
+            return DayType.WEEKEND
+
+    def change_country_code(self, new_country_code: str) -> bool:
+        new_calendar: CoreCalendar | None = AppData._determine_country(new_country_code)
+        if new_calendar is None:
+            return False
+
+        old_calendar: CoreCalendar = self.calendar
+        for date, day_data in self.day.items():
+            old_default: DayType = self._get_default_day_type(old_calendar, date)
+            if day_data.day_type == old_default:
+                day_data.day_type = self._get_default_day_type(new_calendar, date)
+
+        self.country_code = new_country_code
+        self.calendar = new_calendar
+        return True
 
     def copy_from(self, data: AppData):
         if self._version != data._version:

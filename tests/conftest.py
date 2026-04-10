@@ -16,6 +16,7 @@ from work_tracker.command.commands.calendar import CalendarHandler
 from work_tracker.command.commands.checkpoint import CheckpointHandler
 from work_tracker.command.commands.clear import ClearHandler
 from work_tracker.command.commands.config import ConfigHandler
+from work_tracker.command.commands.country import CountryHandler
 from work_tracker.command.commands.dayoff import DayoffHandler
 from work_tracker.command.commands.days import DaysHandler
 from work_tracker.command.commands.deletealias import DeletealiasHandler
@@ -310,6 +311,14 @@ def clear_handler(mocker: MockerFixture) -> ClearHandler:
 @pytest.fixture(scope="function")
 def config_handler(mocker: MockerFixture) -> ConfigHandler:
     return ConfigHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def country_handler(mocker: MockerFixture) -> CountryHandler:
+    return CountryHandler(
         work_data=sample_data(),
         io=mock_io(mocker)
     )

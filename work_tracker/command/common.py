@@ -231,6 +231,26 @@ _global_command_templates: list[CommandTemplate] = [
         valid_argument_types=[[], [str], [str, SimpleTypeArgument]],
     ),
     CommandTemplate(
+        name="country",
+        help=CommandHelp(
+            full_use_case_template="country [code]",
+            short_help_description="Displays or changes the country code",
+            full_help_description=(
+                " Displays the current country code if no argument is provided."
+                " If a country code is provided, changes the country code used to determine public holidays and non-working days."
+                " Days that were already initialized and whose day type was not manually changed will be re-evaluated using the new country's calendar."
+                " Days that were manually overridden are left unchanged."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "country", "displays the current country code"),
+                CommandUseCaseDescription(set(Mode), "country <code>", "changes the country code to the specified ISO code"),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=["code"],
+        valid_argument_types=[[], [str]],
+    ),
+    CommandTemplate(
         name="dayoff",
         help=CommandHelp(
             full_use_case_template="dayoff",
