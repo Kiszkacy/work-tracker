@@ -35,4 +35,4 @@ jobs:
 
       - name: Run E2E Tests
         run: |
-          uv run pytest -vv -s tests/e2e.py
+          uv run pytest -vv -s tests/e2e.py --random-order
