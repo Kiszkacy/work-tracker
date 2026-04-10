@@ -14,7 +14,7 @@ class MacroHandler(CommandHandler):
     @classmethod
     def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
         if len(typed_words) == 0:
-            candidates = [CompletionCandidate(name) for name in MacroManager.macros.keys()]
+            candidates = [CompletionCandidate(name, meta=MacroManager.macros[name].command_text) for name in MacroManager.macros.keys()]
             candidates.append(CompletionCandidate(CompletionHint.Chain))
             return cls.get_fitting_completions(candidates, last_word)
         return []
