@@ -1,5 +1,4 @@
 import datetime
-import os
 
 from prompt_toolkit.completion import Completion
 

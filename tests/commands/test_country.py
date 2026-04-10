@@ -1,10 +1,9 @@
 import datetime
 
 import pytest
-
 from workalendar.registry import registry
 
-from tests.conftest import handle_call, sample_data, mock_io, TestInputOutput
+from tests.conftest import handle_call, TestInputOutput
 from work_tracker.command.command_handler import CommandHandlerResult
 from work_tracker.command.commands.country import CountryHandler
 from work_tracker.common import AppData, Date, DayType
