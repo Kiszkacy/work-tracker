@@ -1,14 +1,24 @@
 import re
 
-from work_tracker.error import CommandErrorInvalidDateCount
+from prompt_toolkit.completion import Completion
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument
+from work_tracker.command.common import CommandArgument, CompletionCandidate, CompletionHint
 from work_tracker.command.macro_manager import MacroManager, MacroTemplate
 from work_tracker.common import Date, ReadonlyAppState
+from work_tracker.error import CommandErrorInvalidDateCount
 from work_tracker.text.common import wrap_text, frame_text, Color
 
 
 class MacroHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            candidates = [CompletionCandidate(name, meta=MacroManager.macros[name].command_text) for name in MacroManager.macros.keys()]
+            candidates.append(CompletionCandidate(CompletionHint.Chain))
+            return cls.get_fitting_completions(candidates, last_word)
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         # TODO add pagination
         if date_count == 0 and argument_count == 0:
@@ -48,6 +58,11 @@ class MacroHandler(CommandHandler):
         elif date_count == 0:
             macro_identifier: str = arguments[0]
             arguments_to_process: list[str] = arguments[1:]
+
+            # macro cant be named 'macro' nor 'deletemacro' to prevent softlocking user out of creating/updating macros
+            if macro_identifier.lower() in ["macro", "deletemacro"]:
+                self.io.output("Macro identifier cannot be 'macro' or 'deletemacro'.")
+                return CommandHandlerResult(undoable=False)
 
             macro_arguments: list[str] = []
             command_text_starts_at: int = 0

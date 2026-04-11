@@ -1,13 +1,19 @@
-from work_tracker.config import Config
-from work_tracker.error import CommandErrorInvalidDateCount, CommandErrorInvalidArgumentCount
+from prompt_toolkit.completion import Completion
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument
+from work_tracker.command.common import CommandArgument, CompletionCandidate
 from work_tracker.command.keyword_manager import KeywordManager, KeywordTemplate
 from work_tracker.common import Date, Mode, ReadonlyAppState
+from work_tracker.config import Config
+from work_tracker.error import CommandErrorInvalidDateCount, CommandErrorInvalidArgumentCount
 from work_tracker.text.common import wrap_text, frame_text, Color, strip_ansi
 
 
 class KeywordHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count != 0:
             return CommandHandlerResult(undoable=False, error=CommandErrorInvalidDateCount(self.command_name, received_date_count=date_count, expected_date_count=0))

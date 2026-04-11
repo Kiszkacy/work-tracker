@@ -1,5 +1,7 @@
+from prompt_toolkit.completion import Completion
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument, AdditionalInputArgument
+from work_tracker.command.common import CommandArgument, AdditionalInputArgument, CompletionCandidate, CompletionHint
 from work_tracker.common import Date, ReadonlyAppState, classproperty
 from work_tracker.config import Config
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidArgumentValue, CommandErrorInvalidDateCount
@@ -7,6 +9,30 @@ from work_tracker.text.common import wrap_text, frame_text, Color, strip_ansi
 
 
 class TutorialHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if not in_subcommand_mode and len(typed_words) == 0:
+            return cls.get_fitting_completions([
+                CompletionCandidate("1", "page number"),
+                CompletionCandidate("2", "page number"),
+                CompletionCandidate("3", "page number"),
+                CompletionCandidate("4", "page number"),
+                CompletionCandidate("5", "page number"),
+                CompletionCandidate(CompletionHint.Chain)
+            ], last_word)
+        if in_subcommand_mode and len(typed_words) == 0:
+            return cls.get_fitting_completions([
+                CompletionCandidate("next"),
+                CompletionCandidate("previous"),
+                CompletionCandidate("quit"),
+                CompletionCandidate("1", "page number"),
+                CompletionCandidate("2", "page number"),
+                CompletionCandidate("3", "page number"),
+                CompletionCandidate("4", "page number"),
+                CompletionCandidate("5", "page number"),
+            ], last_word)
+        return []
+
     @classproperty
     def pages(self) -> list[str]:
         return [
@@ -75,9 +101,10 @@ class TutorialHandler(CommandHandler):
             current_page_index: int = 0
             total_pages: int = len(self.pages)
 
+            self.enter_subcommand_mode()
             while True:
                 self.display_page(current_page_index)
-                user_input: list[AdditionalInputArgument] = self.get_additional_input(custom_autocomplete=[str(number+1) for number in range(total_pages)] + ["next", "previous", "quit"])
+                user_input: list[AdditionalInputArgument] = self.get_additional_input()
                 if len(user_input) != 1:
                     continue
 
@@ -95,6 +122,7 @@ class TutorialHandler(CommandHandler):
                         current_page_index = max(0, current_page_index-1)
                     else:
                         self.io.output("Unknown command.", color=Color.from_key(Config.data.output.error_color))
+            self.exit_subcommand_mode()
 
             return CommandHandlerResult(undoable=False)
         elif date_count == 0 and argument_count == 1:

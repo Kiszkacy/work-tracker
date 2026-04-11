@@ -16,6 +16,18 @@ class TimeArgumentType(Enum):
     Subtract = auto()
 
 
+class CompletionHint(Enum):
+    Time = auto()
+    Integer = auto()
+    Chain = auto()
+
+
+@dataclass(frozen=True)
+class CompletionCandidate:
+    value: str | CompletionHint
+    meta: str | None = None
+
+
 @dataclass(frozen=True)
 class TimeArgument:
     minutes: int
@@ -121,7 +133,7 @@ _global_command_templates: list[CommandTemplate] = [
             short_help_description="Displays, updates or creates aliases",
             full_help_description=(
                 f" Aliases are simple text replacements that occur before command parsing."
-                f" When an alias is detected at the beginning of user input, it is expanded to its replacement text."
+                f" When an alias is detected anywhere in the user input, it is expanded to its replacement text."
                 f" Unlike macros, aliases do not support arguments and are purely text-based substitutions."
                 f" Aliases can be layered, meaning one alias can reference another."
                 f"\n\nTo avoid any problems during the alias definition, it is recommended to enclose the entire command sequence of the macro in quotes (single or double)."
@@ -141,20 +153,22 @@ _global_command_templates: list[CommandTemplate] = [
     CommandTemplate(
         name="calendar",
         help=CommandHelp(
-            full_use_case_template="calendar",
+            full_use_case_template="calendar ['legend']",
             short_help_description="Displays the calendar for the month",
             full_help_description=(
                 " Displays the calendar for the month corresponding to the given date."
                 f" Dates are marked using a color-coded legend which can be easily configured via {Color.Brightblue.value}config{Color.Reset.value} command,"
                 " this provides a clear distinction between different types of days."
+                f" Use {Color.Brightblue.value}calendar legend{Color.Reset.value} to display the color legend."
             ).strip(),
             use_case_description=[
-                CommandUseCaseDescription(set(Mode), "calendar", ""),
+                CommandUseCaseDescription(set(Mode), "calendar", "displays the calendar for the currently active month"),
+                CommandUseCaseDescription(set(Mode), "calendar 'legend'", "displays the color legend"),
             ],
         ),
         supported_modes=set(Mode),
         abbreviations=[],
-        valid_argument_types=[[]],
+        valid_argument_types=[[], [str]],
     ),
     CommandTemplate(
         name="checkpoint",
@@ -215,6 +229,26 @@ _global_command_templates: list[CommandTemplate] = [
         supported_modes=set(Mode),
         abbreviations=[],
         valid_argument_types=[[], [str], [str, SimpleTypeArgument]],
+    ),
+    CommandTemplate(
+        name="country",
+        help=CommandHelp(
+            full_use_case_template="country [code]",
+            short_help_description="Displays or changes the country code",
+            full_help_description=(
+                " Displays the current country code if no argument is provided."
+                " If a country code is provided, changes the country code used to determine public holidays and non-working days."
+                " Days that were already initialized and whose day type was not manually changed will be re-evaluated using the new country's calendar."
+                " Days that were manually overridden are left unchanged."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "country", "displays the current country code"),
+                CommandUseCaseDescription(set(Mode), "country <code>", "changes the country code to the specified ISO code"),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=["code"],
+        valid_argument_types=[[], [str]],
     ),
     CommandTemplate(
         name="dayoff",
@@ -333,6 +367,22 @@ _global_command_templates: list[CommandTemplate] = [
             ).strip(),
             use_case_description=[
                 CommandUseCaseDescription(set(Mode), "exit", ""),
+            ],
+        ),
+        supported_modes=set(Mode),
+        abbreviations=[],
+        valid_argument_types=[[]],
+    ),
+    CommandTemplate(
+        name="files",
+        help=CommandHelp(
+            full_use_case_template="files",
+            short_help_description="Displays the path to the directory where all saved files are located",
+            full_help_description=(
+                " Displays the path to the directory where all saved files, including the config.yaml, macros.txt and aliases.txt are stored."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription(set(Mode), "files", ""),
             ],
         ),
         supported_modes=set(Mode),

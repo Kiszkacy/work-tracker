@@ -81,3 +81,22 @@ def test_should_work_in_month_mode(calendar_handler: CalendarHandler, random_dat
 
     assert TestInputOutput.get_output().strip() is not None
     assert result.error is None
+
+
+def test_should_output_legend(calendar_handler: CalendarHandler):
+    result: CommandHandlerResult = handle_call(calendar_handler, arguments=["legend"])
+
+    assert TestInputOutput.get_output().strip() is not None
+    assert result.error is None
+
+
+def test_should_return_error_on_extra_argument(calendar_handler: CalendarHandler):
+    result: CommandHandlerResult = handle_call(calendar_handler, arguments=["legend", "extra"])
+
+    assert result.error is not None
+
+
+def test_should_return_error_on_unknown_argument(calendar_handler: CalendarHandler):
+    result: CommandHandlerResult = handle_call(calendar_handler, arguments=["unknown"])
+
+    assert result.error is not None

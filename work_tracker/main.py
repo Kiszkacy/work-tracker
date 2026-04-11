@@ -1,29 +1,23 @@
-from work_tracker._work_tracker import WorkTracker
-from work_tracker import __version__
+import argparse
 
-import sys
+from work_tracker import __version__
+from work_tracker._work_tracker import WorkTracker
 
 
 def main():
-    args: list[str] = sys.argv[1:]
+    parser = argparse.ArgumentParser(
+        prog="work-tracker",
+        description="A tool to track your work hours and manage your schedule.",
+        epilog="To start the app, simply run work-tracker with no arguments.",
+        formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=40),
+    )
+    parser.add_argument("-v", "--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument("-suc", "--skip-update-check", action="store_true", help="skip the update check on startup")
 
-    if "-h" in args or "--help" in args:
-        print("WorkTracker: A tool to track your work hours and manage your schedule.")
-        print("To run the app, simply execute: work-tracker")
-        print("Usage: work-tracker [OPTION]")
-        print("  -h, --help                 Show this help message")
-        print("  -v, --version              Show the current version of WorkTracker")
-        print("  -suc, --skip-update-check  Skip the update check on startup")
-        sys.exit(0)
-
-    if "-v" in args or "--version" in args:
-        print(f"WorkTracker version installed: {__version__}")
-        sys.exit(0)
-
-    skip_update_check: bool = "-suc" in args or "--skip-update-check" in args
+    args = parser.parse_args()
 
     tracker: WorkTracker = WorkTracker()
-    tracker.initialize(check_is_new_version_available=not skip_update_check)
+    tracker.initialize(check_is_new_version_available=not args.skip_update_check)
     tracker.start()
 
 

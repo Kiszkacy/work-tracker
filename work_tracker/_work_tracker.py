@@ -113,7 +113,7 @@ class WorkTracker:
         shutil.copy(Path(__file__).parent.joinpath("data/default.aliases.txt"), get_data_path().joinpath("aliases.txt"))
 
     def _initialize_io(self):
-        self.io = InputOutputHandler()
+        self.io = InputOutputHandler(self.state)
 
     def _load_data(self):
         self.data = CheckpointManager.load_latest()
@@ -124,10 +124,11 @@ class WorkTracker:
         self.io.output(f"Before you start using it, please provide your country code. This will allow {Color.Brightblue.value}WorkTracker{Color.Reset.value} to automatically import all relevant holidays and mark your non-working days accordingly.")
 
         country_code: str
-        valid_codes: list[str] = sorted(list(registry.get_calendars().keys()))
+        calendars: dict = registry.get_calendars()
+        valid_codes_with_names: dict[str, str] = {code: calendar.name for code, calendar in sorted(calendars.items())}
         while True:
-            country_code = self.io.input(f"{Config.data.input.prefix} ", custom_autocomplete=valid_codes).upper()
-            if country_code in valid_codes: # TODO use of private method
+            country_code: str = self.io.input(f"{Config.data.input.prefix} ", custom_autocomplete=valid_codes_with_names).upper()
+            if country_code in valid_codes_with_names:
                 break
             else:
                 self.io.output("Invalid country code. Please input valid contry code.", color=Color.from_key(Config.data.output.error_color))

@@ -1,9 +1,11 @@
-import calendar
 import re
 from enum import Enum, auto
 
+from prompt_toolkit.completion import Completion
+
+import calendar
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument
+from work_tracker.command.common import CommandArgument, CompletionCandidate, CompletionHint
 from work_tracker.common import Date, AttendanceType, DayType, WorkLocation, ReadonlyAppState, find_first_not_fulfilling
 from work_tracker.config import Config, CalendarCommandConfig
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDate, CommandErrorInvalidDateCount
@@ -22,9 +24,18 @@ class CalendarDateType(Enum):
 
 
 class CalendarHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            return cls.get_fitting_completions([CompletionCandidate("legend", "display the color legend"), CompletionCandidate(CompletionHint.Chain)], last_word)
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
             self._display_calendar(state.active_date)
+            return CommandHandlerResult(undoable=False)
+        elif date_count == 0 and argument_count == 1 and "legend".startswith(arguments[0].lower()):
+            self._display_legend()
             return CommandHandlerResult(undoable=False)
         elif date_count != 0 and argument_count == 0:
             if invalid_date := find_first_not_fulfilling(dates, lambda date: date.is_month_date()):
@@ -44,6 +55,31 @@ class CalendarHandler(CommandHandler):
             text=f"{Color.from_key(Config.data.command.calendar.title_color).value if Config.data.command.calendar.title_color else ''}{text.rstrip()}"
         )
         self.io.output(framed_text)
+
+    def _display_legend(self):
+        colors: dict[CalendarDateType, str] = self._get_each_date_color()
+        separator: str = " | "
+
+        def _dot(color_code: str) -> str:
+            return f"{color_code}●{Color.Clear.value}"
+
+        entries: list[tuple[str, str]] = [
+            (_dot(Color.Reset.value),                          "default (unspecified)"),
+            (_dot(colors[CalendarDateType.Office]),            "office"),
+            (_dot(colors[CalendarDateType.IncompleteOffice]),  "office - target not met or empty"),
+            (_dot(colors[CalendarDateType.Remote]),            "remote"),
+            (_dot(colors[CalendarDateType.IncompleteRemote]),  "remote - target not met or empty"),
+            (_dot(colors[CalendarDateType.Weekend]),           "weekend"),
+            (_dot(colors[CalendarDateType.Holiday]),           "holiday"),
+            (_dot(colors[CalendarDateType.Dayoff]),            "day off"),
+            (_dot(colors[CalendarDateType.Absence]),           "absence"),
+        ]
+
+        rows: list[str] = [
+            f"{dot}{Color.Brightblack.value if index % 2 == 1 else Color.Reset.value}{separator}{label}"
+            for index, (dot, label) in enumerate(entries)
+        ]
+        self.io.output(frame_text(text="\n".join(rows), title="Legend", title_color=Color.Bold))
 
     def _get_calendar_text(self, date: Date) -> str:
         month: Date = date.to_month_date()

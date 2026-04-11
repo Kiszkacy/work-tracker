@@ -1,12 +1,20 @@
 import datetime
 
+from prompt_toolkit.completion import Completion
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument, TimeArgument
+from work_tracker.command.common import CommandArgument, TimeArgument, CompletionCandidate, CompletionHint
 from work_tracker.common import Date, ReadonlyAppState, DayData, Time, Mode, find_first_not_fulfilling
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidMode, CommandErrorInvalidDate
 
 
 class StartHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            return cls.get_fitting_completions([CompletionCandidate("8:00", "example start hour"), CompletionCandidate("9:00", "example start hour"), CompletionCandidate(CompletionHint.Chain)], last_word)
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
             match state.mode:

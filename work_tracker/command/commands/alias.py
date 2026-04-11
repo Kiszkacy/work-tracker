@@ -1,12 +1,22 @@
-from work_tracker.error import CommandErrorInvalidDateCount
-from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument
+from prompt_toolkit.completion import Completion
+
 from work_tracker.command.alias_manager import AliasManager, AliasTemplate
+from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
+from work_tracker.command.common import CommandArgument, CompletionCandidate, CompletionHint
 from work_tracker.common import Date, ReadonlyAppState
+from work_tracker.error import CommandErrorInvalidDateCount
 from work_tracker.text.common import wrap_text, frame_text, Color
 
 
 class AliasHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        if len(typed_words) == 0:
+            candidates = [CompletionCandidate(f"'{name}'", meta=AliasManager.aliases[name].replacement_text) for name in AliasManager.aliases.keys()]
+            candidates.append(CompletionCandidate(CompletionHint.Chain))
+            return cls.get_fitting_completions(candidates, last_word)
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         # TODO add pagination
         if date_count == 0 and argument_count == 0:
@@ -50,6 +60,10 @@ class AliasHandler(CommandHandler):
             # alias cant be named 'alias' nor 'deletealias' to prevent softlocking user out of creating/updating aliases
             if alias_identifier.lower() in ["alias", "deletealias"]:
                 self.io.output("Alias identifier cannot be 'alias' or 'deletealias'.")
+                return CommandHandlerResult(undoable=False)
+
+            if alias_identifier.find(" ") != -1:
+                self.io.output(f"Alias identifier cannot have whitespaces in its name. Try using an underscore ({Color.Brightblue.value}_{Color.Reset.value}) instead.")
                 return CommandHandlerResult(undoable=False)
             
             alias: AliasTemplate = AliasTemplate(

@@ -16,6 +16,7 @@ from work_tracker.command.commands.calendar import CalendarHandler
 from work_tracker.command.commands.checkpoint import CheckpointHandler
 from work_tracker.command.commands.clear import ClearHandler
 from work_tracker.command.commands.config import ConfigHandler
+from work_tracker.command.commands.country import CountryHandler
 from work_tracker.command.commands.dayoff import DayoffHandler
 from work_tracker.command.commands.days import DaysHandler
 from work_tracker.command.commands.deletealias import DeletealiasHandler
@@ -23,6 +24,7 @@ from work_tracker.command.commands.deletemacro import DeletemacroHandler
 from work_tracker.command.commands.done import DoneHandler
 from work_tracker.command.commands.end import EndHandler
 from work_tracker.command.commands.exit import ExitHandler
+from work_tracker.command.commands.files import FilesHandler
 from work_tracker.command.commands.fte import FteHandler
 from work_tracker.command.commands.help import HelpHandler
 from work_tracker.command.commands.history import HistoryHandler
@@ -315,6 +317,14 @@ def config_handler(mocker: MockerFixture) -> ConfigHandler:
 
 
 @pytest.fixture(scope="function")
+def country_handler(mocker: MockerFixture) -> CountryHandler:
+    return CountryHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
 def dayoff_handler(mocker: MockerFixture) -> DayoffHandler:
     return DayoffHandler(
         work_data=sample_data(),
@@ -365,6 +375,14 @@ def end_handler(mocker: MockerFixture) -> EndHandler:
 @pytest.fixture(scope="function")
 def exit_handler(mocker: MockerFixture) -> ExitHandler:
     return ExitHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def files_handler(mocker: MockerFixture) -> FilesHandler:
+    return FilesHandler(
         work_data=sample_data(),
         io=mock_io(mocker)
     )

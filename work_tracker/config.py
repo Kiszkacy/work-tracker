@@ -65,6 +65,10 @@ class InputTimeConfig(BaseModel):
     subtract_prefix: str
 
 
+class InputAutocompletionConfig(BaseModel): # v3
+    max_popup_width: int
+
+
 class InputConfig(BaseModel):
     command_chain_symbol: str
     prefix: str
@@ -74,6 +78,8 @@ class InputConfig(BaseModel):
     history_size: int
     date: InputDateConfig
     time: InputTimeConfig
+    # v3
+    autocompletion: InputAutocompletionConfig
 
 
 class FrameConfig(BaseModel):
@@ -90,7 +96,7 @@ class OutputConfig(BaseModel):
     error_color: str
 
 
-__config_version__: int = 2
+__config_version__: int = 3
 
 
 class MainConfig(BaseModel):
@@ -131,6 +137,13 @@ class MainConfig(BaseModel):
 
         raw_data["version"] = 2
 
+    @staticmethod
+    def _update_config_data_to_v3(raw_data: dict[str, Any]):
+        raw_data["input"].setdefault("autocompletion", {})
+        raw_data["input"]["autocompletion"]["max_popup_width"] = raw_data["input"]["autocompletion"].get("max_popup_width", 80)
+
+        raw_data["version"] = 3
+
     @classmethod
     def _update_config_data_to_latest_version(cls, raw_data: dict[str, Any]):
         # just like data, update to target version step by step: A -> A+1 -> A+2 -> ... -> B
@@ -139,6 +152,9 @@ class MainConfig(BaseModel):
         if current_version == 1:
             cls._update_config_data_to_v2(raw_data)
             current_version = 2
+        if current_version == 2:
+            cls._update_config_data_to_v3(raw_data)
+            current_version = 3
 
 
 class Config:

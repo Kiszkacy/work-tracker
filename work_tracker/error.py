@@ -158,7 +158,7 @@ class ParserErrorInvalidArgumentTypes(ParserError):
     def message(self) -> str:
         valid_types: list[str] = [
             self._format_type_list(args) for args in self.command.valid_argument_types
-            if len(args) == len(self.received_types)
+            if len(args) == len(self.received_types) or (len(args)-1 == len(self.received_types) and len(args) >= 1 and args[-1] is Ellipsis)
         ]
         formatted_types: str = ', '.join(valid_types[:-1]) + ((' or ' if len(valid_types) > 1 else '') + str(valid_types[-1]))
 
@@ -166,6 +166,9 @@ class ParserErrorInvalidArgumentTypes(ParserError):
 
     @classmethod
     def _get_name_from_type(cls, type_: type) -> str:
+        if type_ is Ellipsis:
+            return "..."
+
         if isinstance(type_, UnionType):
             return " | ".join(cls._get_name_from_type(arg) for arg in get_args(type_))
 

@@ -265,9 +265,15 @@ class CommandParser:
     @classmethod
     def _extract_arguments(cls, parser: CommandTextParser, read_dates: bool = False) -> list[CommandArgument]:
         arguments: list[CommandArgument] = []
-        while parser.peak() is not None:
+        while (token := parser.peak()) is not None:
+            is_quoted: bool = (token.startswith('"') and token.endswith('"')) or \
+                              (token.startswith("'") and token.endswith("'"))
+            if is_quoted:
+                arguments.append(cls._get_string(parser))
+                continue
+
             if read_dates:
-                parsed_value = cls._extract_date(parser.peak())
+                parsed_value = cls._extract_date(token)
                 if parsed_value is not None:
                     parser.next()
                     arguments.append(parsed_value)

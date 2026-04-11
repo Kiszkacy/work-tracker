@@ -1,12 +1,18 @@
+from prompt_toolkit.completion import Completion
+
 from work_tracker import __version__
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument
+from work_tracker.command.common import CommandArgument, CompletionCandidate
 from work_tracker.common import Date, ReadonlyAppState
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidDateCount
 from work_tracker.text.common import Color
 
 
 class VersionHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        return []
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         if date_count == 0 and argument_count == 0:
             self.io.output(f"{__version__}", color=Color.Brightblue)

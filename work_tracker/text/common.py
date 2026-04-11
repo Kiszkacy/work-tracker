@@ -114,11 +114,11 @@ def _reinsert_ansi(wrapped_text: str, original_text: str) -> str: # TODO refacto
 
 def _wrap_text(text: str, width: int) -> str:
     stripped: str = strip_ansi(text)
-    wrapped: str = textwrap.fill(text=stripped, width=width, break_on_hyphens=False, break_long_words=False)
+    wrapped: str = textwrap.fill(text=stripped, width=width, break_on_hyphens=False, break_long_words=True)
     return _reinsert_ansi(wrapped_text=wrapped, original_text=text)
 
 
-def wrap_text( # TODO doesnt work when one word is longer than width (wont break the word)
+def wrap_text(
     text: str,
     width: int = None,
     indent: str = "",

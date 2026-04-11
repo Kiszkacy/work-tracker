@@ -1,7 +1,9 @@
 from enum import Enum, auto
 
+from prompt_toolkit.completion import Completion
+
 from work_tracker.command.command_handler import CommandHandlerResult, CommandHandler
-from work_tracker.command.common import CommandArgument, TimeArgument
+from work_tracker.command.common import CommandArgument, TimeArgument, CompletionHint, CompletionCandidate
 from work_tracker.common import Date, WorkLocation, ReadonlyAppState, find_first_not_fulfilling, Mode, MonthData
 from work_tracker.error import CommandErrorInvalidArgumentCount, CommandErrorInvalidArgumentValue, CommandErrorInvalidDate, CommandErrorInvalidMode
 from work_tracker.text.common import about_symbol, Color
@@ -21,6 +23,20 @@ class CommandCallType(Enum):
 
 
 class DaysHandler(CommandHandler):
+    @classmethod
+    def get_completions(cls, typed_words: list[str], last_word: str, in_subcommand_mode: bool) -> list[Completion | CompletionCandidate]:
+        is_work_type_provided: bool = len(typed_words) > 0 and ("office".startswith(typed_words[0]) or "remote".startswith(typed_words[0]))
+
+        if len(typed_words) == 0:
+            candidates = [CompletionCandidate("office"), CompletionCandidate("remote"), CompletionCandidate(CompletionHint.Time)]
+        elif len(typed_words) == 1:
+            candidates = [CompletionCandidate(CompletionHint.Time)] if is_work_type_provided else [CompletionCandidate("clean")]
+        elif len(typed_words) == 2 and is_work_type_provided:
+            candidates = [CompletionCandidate("clean")]
+        else:
+            return []
+        return cls.get_fitting_completions(candidates, last_word)
+
     def handle(self, dates: list[Date], date_count: int, arguments: list[CommandArgument], argument_count: int, state: ReadonlyAppState) -> CommandHandlerResult:
         call_type: CommandCallType = None
         

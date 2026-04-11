@@ -40,6 +40,8 @@ input:
     time:
         add_prefix: +
         subtract_prefix: '-'
+    autocompletion:
+        max_popup_width: 80
 output:
     frame:
         padding: 1
