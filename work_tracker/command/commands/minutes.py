@@ -28,9 +28,9 @@ class MinutesHandler(CommandHandler):
         if len(typed_words) == 0:
             candidates = [CompletionCandidate("office", "calculate office-only minutes"), CompletionCandidate("remote", "calculate remote-only minutes"), CompletionCandidate(CompletionHint.Integer, "number of days")]
         elif len(typed_words) == 1:
-            candidates = [CompletionCandidate(CompletionHint.Integer)] if cls._is_work_type(typed_words[0]) else [CompletionCandidate("clean"), CompletionCandidate(CompletionHint.Chain)]
+            candidates = [CompletionCandidate(CompletionHint.Integer, "number of days")] if cls._is_work_type(typed_words[0]) else [CompletionCandidate("clean"), CompletionCandidate(CompletionHint.Chain)]
         elif len(typed_words) == 2 and cls._is_work_type(typed_words[0]):
-            candidates = [CompletionCandidate("clean"), CompletionCandidate(CompletionHint.Chain)]
+            candidates = [CompletionCandidate("clean", "ignore already filled out time"), CompletionCandidate(CompletionHint.Chain)]
         else:
             return []
         return cls.get_fitting_completions(candidates, last_word)

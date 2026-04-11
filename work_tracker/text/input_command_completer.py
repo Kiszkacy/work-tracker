@@ -181,11 +181,11 @@ class InputCommandCompleter(WordCompleter):
             if isinstance(candidate, CompletionCandidate):
                 if isinstance(candidate.value, CompletionHint):
                     if candidate.value == CompletionHint.Time:
-                        for example in ("8h", "1:30", "90m"): # TODO: handle examples properly, try to determine what user uses usually
+                        for example in ("8h", "7:30", "8:30"): # TODO: handle examples properly, try to determine what user uses usually
                             if example.lower().startswith(partial.lower()):
                                 yield Completion(example, start_position=-len(partial), display_meta=self._truncate_meta(candidate.meta or "time", max_suggestion_width))
                     elif candidate.value == CompletionHint.Integer:
-                        for example in ("1", "5", "10", "20"):
+                        for example in ("1", "2", "5", "10"):
                             if example.lower().startswith(partial.lower()):
                                 yield Completion(example, start_position=-len(partial), display_meta=self._truncate_meta(candidate.meta or "number", max_suggestion_width))
                     elif candidate.value == CompletionHint.Chain:
