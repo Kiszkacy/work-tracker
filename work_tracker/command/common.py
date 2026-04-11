@@ -168,7 +168,7 @@ _global_command_templates: list[CommandTemplate] = [
         ),
         supported_modes=set(Mode),
         abbreviations=[],
-        valid_argument_types=[[], [str], [str, str]],
+        valid_argument_types=[[], [str]],
     ),
     CommandTemplate(
         name="checkpoint",
