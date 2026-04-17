@@ -8,6 +8,7 @@ from pytest_mock import MockerFixture
 from workalendar.registry import registry
 
 from work_tracker import WorkTracker
+from work_tracker.command.clipboard import Clipboard
 from work_tracker.command.command_handler import CommandHandler, CommandHandlerResult
 from work_tracker.command.command_history import CommandHistoryEntry
 from work_tracker.command.commands.absence import AbsenceHandler
@@ -16,6 +17,7 @@ from work_tracker.command.commands.calendar import CalendarHandler
 from work_tracker.command.commands.checkpoint import CheckpointHandler
 from work_tracker.command.commands.clear import ClearHandler
 from work_tracker.command.commands.config import ConfigHandler
+from work_tracker.command.commands.copy import CopyHandler
 from work_tracker.command.commands.country import CountryHandler
 from work_tracker.command.commands.dayoff import DayoffHandler
 from work_tracker.command.commands.days import DaysHandler
@@ -35,6 +37,7 @@ from work_tracker.command.commands.keyword import KeywordHandler
 from work_tracker.command.commands.macro import MacroHandler
 from work_tracker.command.commands.minutes import MinutesHandler
 from work_tracker.command.commands.office import OfficeHandler
+from work_tracker.command.commands.paste import PasteHandler
 from work_tracker.command.commands.present import PresentHandler
 from work_tracker.command.commands.redo import RedoHandler
 from work_tracker.command.commands.remote import RemoteHandler
@@ -193,6 +196,11 @@ def reset_io_buffer():
     TestInputOutput.clear()
 
 
+@pytest.fixture(autouse=True)
+def reset_clipboard():
+    Clipboard.clear()
+
+
 def get_fixture_params(request) -> dict[str, Any]:
     params: dict[str, Any] = {}
     if hasattr(request, "param"):
@@ -311,6 +319,14 @@ def clear_handler(mocker: MockerFixture) -> ClearHandler:
 @pytest.fixture(scope="function")
 def config_handler(mocker: MockerFixture) -> ConfigHandler:
     return ConfigHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def copy_handler(mocker: MockerFixture) -> CopyHandler:
+    return CopyHandler(
         work_data=sample_data(),
         io=mock_io(mocker)
     )
@@ -463,6 +479,14 @@ def minutes_handler(mocker: MockerFixture) -> MinutesHandler:
 @pytest.fixture(scope="function")
 def office_handler(mocker: MockerFixture) -> OfficeHandler:
     return OfficeHandler(
+        work_data=sample_data(),
+        io=mock_io(mocker)
+    )
+
+
+@pytest.fixture(scope="function")
+def paste_handler(mocker: MockerFixture) -> PasteHandler:
+    return PasteHandler(
         work_data=sample_data(),
         io=mock_io(mocker)
     )
