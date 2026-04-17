@@ -171,6 +171,26 @@ _global_command_templates: list[CommandTemplate] = [
         valid_argument_types=[[], [str]],
     ),
     CommandTemplate(
+        name="copy",
+        help=CommandHelp(
+            full_use_case_template="copy",
+            short_help_description="Copies the data of a day into the clipboard",
+            full_help_description=(
+                " Copies all data from the specified day into an in-memory clipboard."
+                " If no date is provided, the currently active date is used, which requires being in 'Today' or 'Day' mode."
+                " The clipboard can then be applied to one or more days using the"
+                f" {Color.Brightblue.value}paste{Color.Reset.value} command."
+                " Only a single day date is accepted, month dates are not supported."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription({Mode.Today, Mode.Day}, "copy", "copies the given date data into the clipboard"),
+            ],
+        ),
+        supported_modes={Mode.Today, Mode.Day},
+        abbreviations=[],
+        valid_argument_types=[[]],
+    ),
+    CommandTemplate(
         name="checkpoint",
         help=CommandHelp(
             full_use_case_template="checkpoint [name] ['permanent']",
@@ -575,6 +595,25 @@ _global_command_templates: list[CommandTemplate] = [
             ],
         ),
         supported_modes=set(Mode),
+        abbreviations=[],
+        valid_argument_types=[[]],
+    ),
+    CommandTemplate(
+        name="paste",
+        help=CommandHelp(
+            full_use_case_template="paste",
+            short_help_description="Pastes clipboard data to one or more days",
+            full_help_description=(
+                " Applies the day data previously copied with the"
+                f" {Color.Brightblue.value}copy{Color.Reset.value} command to the specified day or days."
+                " If no date is provided, the currently active date is used, which requires being in 'Today' or 'Day' mode."
+                " Only day dates are accepted, month dates are not supported."
+            ).strip(),
+            use_case_description=[
+                CommandUseCaseDescription({Mode.Today, Mode.Day}, "paste", "pastes clipboard data to the specified dates"),
+            ],
+        ),
+        supported_modes={Mode.Today, Mode.Day},
         abbreviations=[],
         valid_argument_types=[[]],
     ),
