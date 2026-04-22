@@ -11,7 +11,7 @@ from work_tracker.command.common import Command, CompletionHint, CompletionCandi
 from work_tracker.command.keyword_manager import KeywordManager, KeywordTemplate
 from work_tracker.command.macro_manager import MacroManager, MacroTemplate
 from work_tracker.common import AppState
-from work_tracker.config import Config
+from work_tracker.config import Config, InputAutocompletionColorConfig
 
 
 class InputCommandCompleter(WordCompleter):
@@ -98,7 +98,7 @@ class InputCommandCompleter(WordCompleter):
         for keyword in matching:
             candidate: str = Config.data.input.keyword_prefix + keyword.identifier
             meta: str = self._get_keyword_meta(keyword.identifier)
-            yield Completion(candidate, start_position=-len(partial), style="bg:ansigreen", display_meta=self._truncate_meta(meta, max_suggestion_width))
+            yield Completion(candidate, start_position=-len(partial), style=Config.data.input.autocompletion.color.keyword, display_meta=self._truncate_meta(meta, max_suggestion_width))
 
     def _get_keyword_meta(self, identifier: str) -> str:
         if self._state is None:
@@ -111,26 +111,27 @@ class InputCommandCompleter(WordCompleter):
         seen: set[str] = set()
         raw: list[tuple[str, str, str]] = [] # (candidate, meta, color)
 
+        colors: InputAutocompletionColorConfig = Config.data.input.autocompletion.color
         for command in CommandManager.commands:
             if command.name not in seen and command.name.lower().startswith(partial):
                 seen.add(command.name)
-                raw.append((command.name, command.help.short_help_description[:1].lower() + command.help.short_help_description[1:], ""))
+                raw.append((command.name, command.help.short_help_description[:1].lower() + command.help.short_help_description[1:], colors.command))
 
         for command in CommandManager.commands:
             for abbreviation in command.abbreviations:
                 if abbreviation not in seen and abbreviation.lower().startswith(partial):
                     seen.add(abbreviation)
-                    raw.append((abbreviation, f"abbrev. → {command.name}", "bg:ansibrightblack")) # TODO: make these configurable
+                    raw.append((abbreviation, f"abbrev. → {command.name}", colors.abbreviation))
 
         for alias_name, alias in AliasManager.aliases.items(): # TODO: aliases and macro first then commands ?
             if alias_name not in seen and alias_name.lower().startswith(partial):
                 seen.add(alias_name)
-                raw.append((alias_name, f"→ {alias.replacement_text}", "bg:ansiblue"))
+                raw.append((alias_name, f"→ {alias.replacement_text}", colors.alias))
 
         for macro in MacroManager.iterable_macros:
             if macro.identifier not in seen and macro.identifier.lower().startswith(partial):
                 seen.add(macro.identifier)
-                raw.append((macro.identifier, f"→ {macro.command_text}", "bg:ansired"))
+                raw.append((macro.identifier, f"→ {macro.command_text}", colors.macro))
 
         if not raw:
             return

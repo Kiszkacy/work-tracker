@@ -65,8 +65,18 @@ class InputTimeConfig(BaseModel):
     subtract_prefix: str
 
 
+class InputAutocompletionColorConfig(BaseModel): # v4
+    command: str
+    abbreviation: str
+    alias: str
+    macro: str
+    keyword: str
+
+
 class InputAutocompletionConfig(BaseModel): # v3
     max_popup_width: int
+    # v4
+    color: InputAutocompletionColorConfig
 
 
 class InputConfig(BaseModel):
@@ -96,7 +106,7 @@ class OutputConfig(BaseModel):
     error_color: str
 
 
-__config_version__: int = 3
+__config_version__: int = 4
 
 
 class MainConfig(BaseModel):
@@ -144,6 +154,18 @@ class MainConfig(BaseModel):
 
         raw_data["version"] = 3
 
+    @staticmethod
+    def _update_config_data_to_v4(raw_data: dict[str, Any]):
+        raw_data["input"]["autocompletion"].setdefault("color", {})
+        autocompletion_color: dict[str, Any] = raw_data["input"]["autocompletion"]["color"]
+        autocompletion_color["command"] = autocompletion_color.get("command", "")
+        autocompletion_color["abbreviation"] = autocompletion_color.get("abbreviation", "fg:ansiwhite bg:ansibrightblack")
+        autocompletion_color["alias"] = autocompletion_color.get("alias", "bg:ansiblue")
+        autocompletion_color["macro"] = autocompletion_color.get("macro", "bg:ansired")
+        autocompletion_color["keyword"] = autocompletion_color.get("keyword", "bg:ansigreen")
+
+        raw_data["version"] = 4
+
     @classmethod
     def _update_config_data_to_latest_version(cls, raw_data: dict[str, Any]):
         # just like data, update to target version step by step: A -> A+1 -> A+2 -> ... -> B
@@ -155,6 +177,9 @@ class MainConfig(BaseModel):
         if current_version == 2:
             cls._update_config_data_to_v3(raw_data)
             current_version = 3
+        if current_version == 3:
+            cls._update_config_data_to_v4(raw_data)
+            current_version = 4
 
 
 class Config:

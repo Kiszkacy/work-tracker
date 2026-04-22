@@ -42,6 +42,12 @@ input:
         subtract_prefix: '-'
     autocompletion:
         max_popup_width: 80
+        color:
+            abbreviation: 'fg:ansiwhite bg:ansibrightblack'
+            alias: bg:ansiblue
+            command: ''
+            keyword: bg:ansigreen
+            macro: bg:ansired
 output:
     frame:
         padding: 1
@@ -50,4 +56,4 @@ output:
         title_padding: 1
     max_width: 80
     error_color: brightred
-version: 2
+version: 4
