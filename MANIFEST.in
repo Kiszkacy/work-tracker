@@ -10,3 +10,4 @@ exclude MANIFEST.in
 recursive-exclude tests *
 
 prune .git
+prune docs

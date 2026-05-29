@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Treat gifs as binary to prevent line-ending corruption
+*.gif binary
