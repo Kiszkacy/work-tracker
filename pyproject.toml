@@ -2,7 +2,7 @@
 name = "work-tracker"
 description = "A Python library that helps tracking your work time."
 authors = [
-  {name = "Karol Kiszka", email = "karolkisz22@gmail.com"}
+  {name = "Karol Kiszka", email = "karol.kiszka@pm.me"}
 ]
 readme = "README.md"
 license = { text = "MIT" }
